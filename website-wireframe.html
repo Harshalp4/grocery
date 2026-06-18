@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  WEBSITE WIREFRAME  —  Premium Farm Grocery Home Delivery
+  ============================================================================
+  README / HOW TO USE
+  ----------------------------------------------------------------------------
+  1. CLICKABLE WIREFRAME, not production. Purpose: review flow, layout,
+     sections and content before real build.
+  2. Open directly in any browser. No server / build / framework.
+  3. One file: HTML + CSS + vanilla JS. Responsive (mobile-first, scales up).
+  4. All data DUMMY. All prices PLACEHOLDERS (marked * / "approx").
+  5. Images = CSS gradients/boxes only (no copyrighted assets).
+  6. Modals used for: product details, combo pack details, Auto Kirana list,
+     WhatsApp order.  Search "API:" for real-integration points.
+  7. Convert-friendly: each <section> -> a component/route; .card -> component;
+     openModal()/closeModal() -> dialog component.
+
+  BRAND: "FarmFresh" is a PLACEHOLDER name — swap freely.
+  ============================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FarmFresh — Website Wireframe</title>
+<style>
+/* ===========================================================================
+   DESIGN TOKENS (earthy green / warm beige / gold, clean white)
+   =========================================================================== */
+:root{
+  --green:#2f6b46;--green-dark:#1f4a30;--green-soft:#eaf2ec;
+  --beige:#f5efe3;--beige-deep:#e9dfca;--gold:#c9a24b;--gold-soft:#f4ecd8;
+  --ink:#26312b;--muted:#7b857f;--line:#e7e3d8;--white:#fff;
+  --radius:18px;--radius-sm:12px;--shadow:0 8px 26px rgba(31,74,48,.08);
+  --max:1140px;--font:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);color:var(--ink);background:var(--white);line-height:1.5;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+section{padding:56px 0}
+h1,h2,h3{line-height:1.2}
+.eyebrow{color:var(--green);font-weight:700;font-size:13px;letter-spacing:.6px;text-transform:uppercase}
+.sec-title{font-size:30px;font-weight:800;margin:6px 0 8px}
+.sec-sub{color:var(--muted);max-width:620px;margin:0 auto;font-size:15px}
+.center{text-align:center}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;
+  font-family:inherit;font-weight:700;font-size:15px;padding:13px 22px;border-radius:999px;transition:.15s;text-decoration:none}
+.btn-primary{background:var(--green);color:#fff}.btn-primary:hover{background:var(--green-dark)}
+.btn-gold{background:var(--gold);color:#231d0c}
+.btn-outline{background:#fff;color:var(--green);border:1.6px solid var(--green)}
+.btn-wa{background:#1faa59;color:#fff}.btn-wa:hover{background:#178c49}
+.btn-sm{padding:10px 16px;font-size:14px}
+
+/* tags */
+.tag{font-size:11px;font-weight:700;padding:4px 9px;border-radius:7px}
+.tag-gold{background:var(--gold-soft);color:#8a6a16}
+.tag-green{background:var(--green-soft);color:var(--green)}
+.tag-save{background:#fbe9d2;color:#a25e12}
+
+/* cards & image placeholders */
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.imgph{border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--green-soft),var(--beige));
+  display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:600;font-size:13px;position:relative}
+.imgph::after{content:"IMG";position:absolute;bottom:6px;right:9px;font-size:9px;opacity:.5}
+
+.note{background:var(--gold-soft);border:1px dashed var(--gold);color:#7a5d12;font-size:12px;
+  font-weight:600;border-radius:10px;padding:8px 12px;display:inline-block}
+
+/* ===========================================================================
+   HEADER
+   =========================================================================== */
+header{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.96);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:66px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;color:var(--ink)}
+.brand .logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--green),var(--green-dark));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.brand small{font-size:9px;color:var(--muted);font-weight:600;display:block;margin-top:-4px}
+.menu{display:flex;gap:22px;list-style:none}
+.menu a{color:var(--ink);text-decoration:none;font-size:14.5px;font-weight:600}
+.menu a:hover{color:var(--green)}
+.nav-cta{display:flex;gap:10px}
+.hamb{display:none;font-size:24px;background:none;border:none;cursor:pointer}
+@media(max-width:900px){
+  .menu,.nav-cta{display:none}
+  .hamb{display:block}
+  .menu.open{display:flex;position:absolute;top:66px;left:0;right:0;background:#fff;flex-direction:column;
+    padding:16px 20px;gap:14px;border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+}
+
+/* ===========================================================================
+   HERO
+   =========================================================================== */
+.hero{background:linear-gradient(160deg,var(--green-soft),#fff 70%);padding:60px 0}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
+.hero h1{font-size:42px;font-weight:800;letter-spacing:-.5px}
+.hero p.lead{font-size:17px;color:var(--muted);margin:16px 0 26px;max-width:520px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero .visual{height:340px;border-radius:24px;background:
+  radial-gradient(circle at 70% 30%,rgba(201,162,75,.35),transparent 55%),
+  linear-gradient(135deg,var(--green),var(--green-dark));position:relative;color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.hero .visual .big{font-size:64px}
+@media(max-width:820px){.hero-grid{grid-template-columns:1fr}.hero h1{font-size:32px}.hero .visual{height:240px}}
+
+/* ===========================================================================
+   TRUST BAR
+   =========================================================================== */
+.trustbar{background:var(--green);color:#fff;padding:18px 0}
+.trustbar .row{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;text-align:center}
+.trustbar .t{flex:1;min-width:120px;font-size:13.5px;font-weight:600}
+.trustbar .t .e{font-size:20px;display:block;margin-bottom:4px}
+
+/* ===========================================================================
+   GRIDS
+   =========================================================================== */
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.cat{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px 14px;text-align:center;cursor:pointer;transition:.15s}
+.cat:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.cat .e{font-size:32px;display:block;margin-bottom:8px}
+.cat .t{font-weight:700;font-size:14px}
+@media(max-width:820px){.cats{grid-template-columns:repeat(2,1fr)}}
+
+.packs{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+@media(max-width:980px){.packs{grid-template-columns:repeat(2,1fr)}}
+.pack{padding:18px;text-align:center;display:flex;flex-direction:column}
+.pack h3{font-size:16px}
+.pack .price{font-size:26px;font-weight:800;color:var(--green);margin:6px 0}
+.pack .meta{font-size:12px;color:var(--muted);margin-bottom:10px}
+
+.prods{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:980px){.prods{grid-template-columns:repeat(2,1fr)}}
+.prod{overflow:hidden;cursor:pointer}
+.prod .imgph{height:140px;border-radius:0}
+.prod .b{padding:14px}
+.prod .n{font-weight:700;font-size:15px}
+.prod .s{font-size:12px;color:var(--muted);margin:4px 0 8px}
+.prod .p{font-size:17px;font-weight:800;color:var(--green)}
+.prod .mkt{font-size:12.5px;color:var(--muted);text-decoration:line-through;margin-left:6px}
+
+/* auto kirana */
+.kirana-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center}
+@media(max-width:820px){.kirana-grid{grid-template-columns:1fr}}
+.miniform .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.input,select{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:var(--radius-sm);
+  font-family:inherit;font-size:14px;outline:none;background:#fff}
+.input:focus,select:focus{border-color:var(--green)}
+.label{font-size:12.5px;font-weight:600;color:var(--muted);display:block;margin-bottom:6px}
+
+/* farm-to-home timeline */
+.timeline{display:flex;justify-content:space-between;gap:8px;position:relative;flex-wrap:wrap}
+.timeline .step{flex:1;min-width:120px;text-align:center;position:relative;padding:0 6px}
+.timeline .dot{width:54px;height:54px;border-radius:50%;background:var(--green-soft);color:var(--green);
+  display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 10px;border:2px solid var(--green)}
+.timeline .step h4{font-size:14px}
+.timeline .step p{font-size:12px;color:var(--muted)}
+.timeline .step:not(:last-child)::after{content:"→";position:absolute;top:14px;right:-6px;color:var(--gold);font-size:22px}
+@media(max-width:820px){.timeline .step:not(:last-child)::after{display:none}}
+
+/* quality cards */
+.quality{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+@media(max-width:980px){.quality{grid-template-columns:repeat(2,1fr)}}
+.qcard{padding:18px;text-align:center}
+.qcard .e{font-size:26px}.qcard h4{font-size:14px;margin:8px 0 4px}.qcard p{font-size:12px;color:var(--muted)}
+
+/* AI cards */
+.ai-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:980px){.ai-cards{grid-template-columns:repeat(2,1fr)}}
+.aic{padding:18px}.aic h4{font-size:15px}.aic ul{margin:8px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}
+
+/* subscriptions */
+.subs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:980px){.subs{grid-template-columns:repeat(2,1fr)}}
+.sub{padding:20px}.sub h3{font-size:16px}.sub p{font-size:13px;color:var(--muted);margin:8px 0 14px}
+
+/* testimonials */
+.tests{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:820px){.tests{grid-template-columns:1fr}}
+.test{padding:20px}.test .stars{color:var(--gold)}
+.test p{font-size:14px;margin:8px 0 14px}
+.test .who{display:flex;align-items:center;gap:10px}
+.av{width:40px;height:40px;border-radius:50%;background:var(--gold-soft);color:#8a6a16;
+  display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* referral / group buy */
+.refer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:820px){.refer-grid{grid-template-columns:1fr}}
+.rcard{padding:22px;text-align:center}.rcard .e{font-size:30px}
+
+/* whatsapp band */
+.waband{background:linear-gradient(120deg,#1faa59,#0f7a3d);color:#fff;border-radius:24px;
+  padding:34px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.waband h2{font-size:26px}
+
+/* footer */
+footer{background:var(--ink);color:#cfd6d1;padding:48px 0 26px}
+.fgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:28px}
+@media(max-width:820px){.fgrid{grid-template-columns:1fr 1fr}}
+footer h4{color:#fff;font-size:14px;margin-bottom:12px}
+footer a,footer p{color:#aeb6b0;font-size:13px;text-decoration:none;display:block;margin-bottom:7px}
+footer a:hover{color:#fff}
+.fbottom{border-top:1px solid #3a443d;margin-top:28px;padding-top:16px;font-size:12px;color:#8c958f;text-align:center}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,30,24,.5);z-index:100;display:none;
+  align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;width:100%;max-width:460px;max-height:88vh;overflow-y:auto;border-radius:20px;padding:24px;animation:pop .2s ease}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+.modal .x{float:right;font-size:22px;cursor:pointer;color:var(--muted);border:none;background:none}
+.kitem{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.kitem b{color:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     1 — HEADER
+     ============================================================ -->
+<header>
+  <div class="wrap nav">
+    <div class="brand">
+      <span class="logo">🌾</span>
+      <span>FarmFresh<small>placeholder brand</small></span>
+    </div>
+    <ul class="menu" id="menu">
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#products">Products</a></li>
+      <li><a href="#kirana">Auto Kirana</a></li>
+      <li><a href="#combos">Combo Packs</a></li>
+      <li><a href="#subs">Subscriptions</a></li>
+      <li><a href="#farm">About Farm</a></li>
+      <li><a href="#footer">Contact</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a class="btn btn-outline btn-sm" href="#products">Order Now</a>
+      <button class="btn btn-wa btn-sm" onclick="openModal('m-wa')">💬 WhatsApp Order</button>
+    </div>
+    <button class="hamb" onclick="document.getElementById('menu').classList.toggle('open')">☰</button>
+  </div>
+</header>
+
+<!-- ============================================================
+     2 — HERO
+     ============================================================ -->
+<section class="hero" id="hero" style="padding-top:46px">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Farm-to-home groceries</span>
+      <h1>Premium Farm Groceries Delivered Across Mumbai &amp; Navi Mumbai</h1>
+      <p class="lead">Own-label grains, dals, flour, oils and daily essentials — sourced directly and delivered fresh to your home.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#products">Shop Products</a>
+        <a class="btn btn-gold" href="#kirana">Create Auto Kirana List</a>
+      </div>
+      <p style="margin-top:18px;font-size:13px;color:var(--muted)">⭐ Trusted by <b>50+ families</b> · Mumbai · Navi Mumbai · Suburbs</p>
+    </div>
+    <!-- hero visual placeholder (farm-to-home illustration box) -->
+    <div class="visual">
+      <span class="big">🧺</span>
+      <b style="margin-top:8px">Grocery Basket → Home</b>
+      <span style="font-size:12px;opacity:.8">farm-to-home illustration placeholder</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     3 — TRUST BAR
+     ============================================================ -->
+<div class="trustbar">
+  <div class="wrap row">
+    <div class="t"><span class="e">🚜</span>Own Farm Grains</div>
+    <div class="t"><span class="e">🏅</span>Premium Quality</div>
+    <div class="t"><span class="e">💸</span>Fair Pricing</div>
+    <div class="t"><span class="e">🚚</span>Home Delivery</div>
+    <div class="t"><span class="e">👨‍👩‍👧‍👦</span>50+ Families Trust Us</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     4 — CATEGORIES
+     ============================================================ -->
+<section id="categories">
+  <div class="wrap">
+    <div class="center" style="margin-bottom:30px">
+      <span class="eyebrow">Shop by category</span>
+      <h2 class="sec-title">Daily Essentials, Premium Grade</h2>
+    </div>
+    <div class="cats" id="catGrid"><!-- JS fills --></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     5 — AUTO KIRANA SECTION
+     ============================================================ -->
+<section id="kirana" style="background:var(--beige)">
+  <div class="wrap kirana-grid">
+    <div>
+      <span class="eyebrow">Flagship feature</span>
+      <h2 class="sec-title">Auto Kirana List</h2>
+      <p style="color:var(--muted);font-size:15px">Tell us your family size and budget. We prepare your monthly grocery basket automatically — balanced, fairly priced and ready to deliver.</p>
+      <ul style="margin-top:14px;padding-left:18px;color:var(--muted);font-size:14px">
+        <li>Right quantities for your household</li>
+        <li>Stays within your monthly budget</li>
+        <li>One click to add the whole basket</li>
+      </ul>
+    </div>
+    <!-- mini form -->
+    <div class="card miniform" style="padding:22px">
+      <label class="label">Family members</label>
+      <select class="input" id="w-members"><option>2</option><option selected>4</option><option>5</option><option>6+</option></select>
+      <div class="row" style="margin-top:12px">
+        <div>
+          <label class="label">Monthly budget (₹, placeholder)</label>
+          <input class="input" id="w-budget" value="4500">
+        </div>
+        <div>
+          <label class="label">Food preference</label>
+          <select class="input"><option selected>Vegetarian</option><option>Mixed</option><option>High-protein</option></select>
+        </div>
+      </div>
+      <!-- API: POST /kirana/generate -->
+      <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="openModal('m-kirana')">Generate List</button>
+      <p class="note" style="margin-top:12px">Output is a dummy basket for review</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     6 — COMBO PACKS
+     ============================================================ -->
+<section id="combos">
+  <div class="wrap">
+    <div class="center" style="margin-bottom:30px">
+      <span class="eyebrow">Fixed-price family combos</span>
+      <h2 class="sec-title">Combo Packs</h2>
+      <p class="sec-sub">One price, full basket. Built for every household size.</p>
+    </div>
+    <div class="packs" id="packGrid"><!-- JS fills --></div>
+    <p class="center" style="margin-top:18px"><span class="note">All pack prices are placeholders</span></p>
+  </div>
+</section>
+
+<!-- ============================================================
+     7 — PRODUCT HIGHLIGHTS
+     ============================================================ -->
+<section id="products" style="background:var(--green-soft)">
+  <div class="wrap">
+    <div class="center" style="margin-bottom:24px">
+      <span class="eyebrow">Our products</span>
+      <h2 class="sec-title">Best Sellers, Freshly Packed &amp; Premium Grade</h2>
+    </div>
+    <!-- simple tab filter -->
+    <div class="center" style="margin-bottom:22px">
+      <button class="btn btn-sm btn-primary" onclick="filterProds(this,'all')">All</button>
+      <button class="btn btn-sm btn-outline" onclick="filterProds(this,'best')">Best Sellers</button>
+      <button class="btn btn-sm btn-outline" onclick="filterProds(this,'fresh')">Freshly Packed</button>
+      <button class="btn btn-sm btn-outline" onclick="filterProds(this,'premium')">Premium Grade</button>
+    </div>
+    <div class="prods" id="prodGrid"><!-- JS fills --></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     8 — FARM TO HOME JOURNEY
+     ============================================================ -->
+<section id="farm">
+  <div class="wrap">
+    <div class="center" style="margin-bottom:36px">
+      <span class="eyebrow">How it reaches you</span>
+      <h2 class="sec-title">Farm to Home Journey</h2>
+    </div>
+    <div class="timeline">
+      <div class="step"><div class="dot">🌾</div><h4>Farm</h4><p>Own & partner farms, direct sourcing</p></div>
+      <div class="step"><div class="dot">🧹</div><h4>Cleaning &amp; Sorting</h4><p>De-stoned, graded, sorted</p></div>
+      <div class="step"><div class="dot">🔬</div><h4>Quality Check</h4><p>Lab-tested for purity</p></div>
+      <div class="step"><div class="dot">📦</div><h4>Fresh Packing</h4><p>Packed with date stamp</p></div>
+      <div class="step"><div class="dot">🚚</div><h4>Home Delivery</h4><p>To your door, fresh</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     9 — QUALITY & TRANSPARENCY
+     ============================================================ -->
+<section style="background:var(--beige)">
+  <div class="wrap">
+    <div class="center" style="margin-bottom:30px">
+      <span class="eyebrow">Nothing hidden</span>
+      <h2 class="sec-title">Quality &amp; Transparency</h2>
+      <p class="sec-sub">Every pack carries its full story — so you know exactly what you're buying.</p>
+    </div>
+    <div class="quality">
+      <div class="card qcard"><div class="e">📍</div><h4>Source Location</h4><p>Where it was grown</p></div>
+      <div class="card qcard"><div class="e">📅</div><h4>Packing Date</h4><p>Freshness you can see</p></div>
+      <div class="card qcard"><div class="e">🏅</div><h4>Quality Grade</h4><p>Premium A grading</p></div>
+      <div class="card qcard" style="cursor:pointer" onclick="alert('QR traceability (placeholder)')"><div class="e">🔳</div><h4>QR Traceability</h4><p>Scan to trace</p></div>
+      <div class="card qcard" style="cursor:pointer" onclick="alert('Lab test report (placeholder)')"><div class="e">🧪</div><h4>Lab Test Report</h4><p>Purity verified</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     10 — AI GROCERY PLANNER
+     ============================================================ -->
+<section>
+  <div class="wrap">
+    <div class="center" style="margin-bottom:30px">
+      <span class="eyebrow">Smart planning</span>
+      <h2 class="sec-title">AI Grocery Planner</h2>
+      <p class="sec-sub">Let AI create your monthly kirana list, a health-based grocery basket, or a budget-friendly combo.</p>
+    </div>
+    <div class="ai-cards">
+      <div class="card aic"><h4>👨‍👩‍👧‍👦 Family of 4 Plan</h4><ul><li>Rice, atta, dals, oil</li><li>~34 kg / month</li><li>₹4,250*</li></ul>
+        <button class="btn btn-sm btn-outline" style="width:100%;margin-top:12px" onclick="openModal('m-kirana')">View Plan</button></div>
+      <div class="card aic"><h4>💪 High Protein Veg</h4><ul><li>Soya, rajma, sprouts</li><li>Protein-rich basket</li><li>₹3,499*</li></ul>
+        <button class="btn btn-sm btn-outline" style="width:100%;margin-top:12px" onclick="openModal('m-kirana')">View Plan</button></div>
+      <div class="card aic"><h4>💰 ₹5000 Budget Plan</h4><ul><li>Best value mix</li><li>Full month cover</li><li>₹4,980*</li></ul>
+        <button class="btn btn-sm btn-outline" style="width:100%;margin-top:12px" onclick="openModal('m-kirana')">View Plan</button></div>
+      <div class="card aic"><h4>🩺 Diabetic Friendly</h4><ul><li>Low-GI millets</li><li>Ragi, jowar, bajra</li><li>₹3,299*</li></ul>
+        <button class="btn btn-sm btn-outline" style="width:100%;margin-top:12px" onclick="openModal('m-kirana')">View Plan</button></div>
+    </div>
+    <!-- API: POST /ai/plan {prompt} -> plan -->
+  </div>
+</section>
+
+<!-- ============================================================
+     11 — SUBSCRIPTIONS
+     ============================================================ -->
+<section id="subs" style="background:var(--green-soft)">
+  <div class="wrap">
+    <div class="center" style="margin-bottom:30px">
+      <span class="eyebrow">Set it and forget it</span>
+      <h2 class="sec-title">Monthly Subscriptions</h2>
+      <p class="sec-sub">Auto monthly delivery · editable cart · pause anytime · extra savings.</p>
+    </div>
+    <div class="subs" id="subGrid"><!-- JS fills --></div>
+  </div>
+</section>
+
+<!-- ============================================================
+     12 — TESTIMONIALS
+     ============================================================ -->
+<section>
+  <div class="wrap">
+    <div class="center" style="margin-bottom:30px">
+      <span class="eyebrow">From our families</span>
+      <h2 class="sec-title">What Mumbai &amp; Navi Mumbai Say</h2>
+    </div>
+    <div class="tests">
+      <div class="card test"><div class="stars">★★★★★</div>
+        <p>"The atta is chakki-fresh and cheaper than my usual store. Delivery to Vashi was on time."</p>
+        <div class="who"><div class="av">SK</div><div><b>Sneha K.</b><br><span style="font-size:12px;color:var(--muted)">Vashi, Navi Mumbai</span></div></div></div>
+      <div class="card test"><div class="stars">★★★★★</div>
+        <p>"Auto Kirana saved me a full evening of planning. Quality of dal is genuinely premium."</p>
+        <div class="who"><div class="av">AM</div><div><b>Amit M.</b><br><span style="font-size:12px;color:var(--muted)">Powai, Mumbai</span></div></div></div>
+      <div class="card test"><div class="stars">★★★★☆</div>
+        <p>"Our society did a group order and saved more. Loved the packed-on dates on every item."</p>
+        <div class="who"><div class="av">RP</div><div><b>Rupa P.</b><br><span style="font-size:12px;color:var(--muted)">Thane West</span></div></div></div>
+    </div>
+    <p class="center" style="margin-top:16px"><span class="note">Dummy testimonials for review</span></p>
+  </div>
+</section>
+
+<!-- ============================================================
+     13 — REFERRAL & SOCIETY GROUP BUY
+     ============================================================ -->
+<section style="background:var(--beige)">
+  <div class="wrap">
+    <div class="center" style="margin-bottom:30px">
+      <span class="eyebrow">Save together</span>
+      <h2 class="sec-title">Referrals &amp; Society Group Buy</h2>
+    </div>
+    <div class="refer-grid">
+      <div class="card rcard"><div class="e">🎁</div><h3>Refer a Family</h3>
+        <p style="color:var(--muted);font-size:14px;margin:8px 0 14px">Refer a family and both earn grocery rewards.</p>
+        <button class="btn btn-sm btn-outline" onclick="alert('Referral link copied (dummy)')">Get Referral Link</button></div>
+      <div class="card rcard"><div class="e">🏢</div><h3>Society Bulk Orders</h3>
+        <p style="color:var(--muted);font-size:14px;margin:8px 0 14px">Society bulk orders unlock extra discounts.</p>
+        <button class="btn btn-sm btn-outline" onclick="openModal('m-wa')">Start Group Order</button></div>
+      <div class="card rcard"><div class="e">🚚</div><h3>Group Delivery</h3>
+        <p style="color:var(--muted);font-size:14px;margin:8px 0 14px">Combined delivery to one tower saves cost.</p>
+        <button class="btn btn-sm btn-outline" onclick="alert('Group delivery info (dummy)')">Learn More</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     14 — WHATSAPP ORDER
+     ============================================================ -->
+<section>
+  <div class="wrap">
+    <div class="waband">
+      <div>
+        <h2>Prefer WhatsApp?</h2>
+        <p style="opacity:.92;margin-top:6px;max-width:520px">Send us your kirana list on WhatsApp and we'll prepare and deliver it. No app needed.</p>
+      </div>
+      <button class="btn btn-gold" onclick="openModal('m-wa')">💬 Send List on WhatsApp</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     15 — FOOTER
+     ============================================================ -->
+<footer id="footer">
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <div class="brand" style="color:#fff"><span class="logo">🌾</span><span style="color:#fff">FarmFresh</span></div>
+        <p style="margin-top:12px">Premium own-label farm groceries, delivered fresh across Mumbai, Navi Mumbai &amp; suburbs at fair prices.</p>
+        <p>📞 +91 90000 00000 (placeholder)</p>
+        <p>✉️ hello@farmfresh.example</p>
+      </div>
+      <div>
+        <h4>Delivery Areas</h4>
+        <a>Mumbai</a><a>Navi Mumbai</a><a>Thane</a><a>Kalyan–Dombivli</a><a>Panvel</a>
+      </div>
+      <div>
+        <h4>Categories</h4>
+        <a href="#categories">Rice &amp; Flour</a><a href="#categories">Dal &amp; Pulses</a>
+        <a href="#categories">Oils &amp; Ghee</a><a href="#categories">Spices</a><a href="#categories">Millets</a>
+      </div>
+      <div>
+        <h4>Company &amp; Policies</h4>
+        <a href="#farm">About Farm</a><a>Privacy Policy</a><a>Refund Policy</a><a>Terms</a>
+        <h4 style="margin-top:14px">Follow</h4>
+        <a>Instagram · WhatsApp · Facebook</a>
+      </div>
+    </div>
+    <div class="fbottom">© 2026 FarmFresh (placeholder brand). Wireframe for review — all content &amp; pricing are dummy.</div>
+  </div>
+</footer>
+
+<!-- ===================== MODALS ===================== -->
+<div class="modal-overlay" id="modalRoot" onclick="if(event.target===this)closeModal()">
+
+  <!-- product detail modal -->
+  <div class="modal" id="m-product" style="display:none">
+    <button class="x" onclick="closeModal()">✕</button>
+    <div class="imgph" style="height:170px">Product image</div>
+    <h3 id="p-name" style="margin-top:14px">Product</h3>
+    <p id="p-src" style="color:var(--muted);font-size:13px">source · packed date</p>
+    <div style="display:flex;align-items:baseline;gap:8px;margin:10px 0">
+      <span style="font-size:22px;font-weight:800;color:var(--green)" id="p-price">₹—</span>
+      <span class="prod mkt" id="p-mkt" style="text-decoration:line-through;color:var(--muted)">₹—</span>
+      <span class="tag tag-save" id="p-save">Save</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin:10px 0">
+      <div class="kitem"><span>Quality grade</span><b id="p-grade">A</b></div>
+      <div class="kitem"><span>Harvest</span><b>2026</b></div>
+      <div class="kitem"><span>Lab report</span><b>✓</b></div>
+      <div class="kitem"><span>QR trace</span><b>✓</b></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="alert('Added to cart (dummy)');closeModal()">Add to Cart</button>
+  </div>
+
+  <!-- combo pack detail modal -->
+  <div class="modal" id="m-combo" style="display:none">
+    <button class="x" onclick="closeModal()">✕</button>
+    <div class="imgph" style="height:150px">Combo pack</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+      <h3 id="c-name">Pack</h3><span class="tag tag-save" id="c-save">Save</span></div>
+    <p id="c-meta" style="color:var(--muted);font-size:13px"></p>
+    <div id="c-items" style="margin-top:10px"></div>
+    <div style="display:flex;justify-content:space-between;font-weight:800;margin-top:10px;font-size:18px">
+      <span>Pack price</span><span style="color:var(--green)" id="c-price">₹—</span></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="alert('Pack added (dummy)');closeModal()">Add Pack to Cart</button>
+  </div>
+
+  <!-- auto kirana generated modal -->
+  <div class="modal" id="m-kirana" style="display:none">
+    <button class="x" onclick="closeModal()">✕</button>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>Family of 4 — Monthly Kirana</h3><span class="tag tag-green">AI</span></div>
+    <p style="color:var(--muted);font-size:13px">Vegetarian · regular cooking</p>
+    <div id="k-items" style="margin-top:12px"></div>
+    <div style="display:flex;justify-content:space-between;font-weight:800;margin-top:10px;font-size:18px">
+      <span>Estimated total</span><span style="color:var(--green)">₹4,250*</span></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="alert('Basket added (dummy)');closeModal()">Add All to Cart</button>
+    <button class="btn btn-outline" style="width:100%;margin-top:8px" onclick="alert('Saved as Monthly Plan (dummy)');closeModal()">Save as Monthly Plan</button>
+  </div>
+
+  <!-- WhatsApp order modal -->
+  <div class="modal" id="m-wa" style="display:none">
+    <button class="x" onclick="closeModal()">✕</button>
+    <div style="text-align:center"><div style="font-size:44px">💬</div><h3>Order on WhatsApp</h3>
+      <p style="color:var(--muted);font-size:13px">Type or paste your kirana list — we'll confirm price &amp; delivery.</p></div>
+    <label class="label" style="margin-top:14px">Your list</label>
+    <textarea class="input" rows="4" placeholder="e.g. Rice 10kg, Atta 15kg, Toor dal 3kg, Oil 5L"></textarea>
+    <label class="label" style="margin-top:12px">Delivery area</label>
+    <select class="input"><option>Mumbai</option><option selected>Navi Mumbai</option><option>Suburbs</option></select>
+    <!-- API: build wa.me/<number>?text=<list> link here -->
+    <button class="btn btn-wa" style="width:100%;margin-top:14px" onclick="alert('Opens WhatsApp chat (dummy link)')">Send on WhatsApp</button>
+    <p class="note" style="margin-top:12px;display:block;text-align:center">Dummy — no message is actually sent</p>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================================
+   DUMMY DATA
+   =========================================================================== */
+const CATS=[
+  {e:'🍚',t:'Rice'},{e:'🌾',t:'Wheat & Flour'},{e:'🫘',t:'Dal & Pulses'},{e:'🛢️',t:'Oil & Ghee'},
+  {e:'🌶️',t:'Spices'},{e:'🌱',t:'Millets'},{e:'☕',t:'Tea & Coffee'},{e:'🍯',t:'Sugar & Jaggery'}
+];
+
+const PRODUCTS=[
+  {n:'Premium Basmati Rice',src:'Haryana mills',pk:'08 Jun',p:540,m:640,grade:'Aged 1yr',cat:['best','premium']},
+  {n:'Farm Wheat Flour',src:'Own farm, Nashik',pk:'12 Jun',p:255,m:320,grade:'Chakki Fresh',cat:['best','fresh']},
+  {n:'Premium Toor Dal',src:'Vidarbha, MH',pk:'10 Jun',p:160,m:198,grade:'Premium A',cat:['best','premium']},
+  {n:'Groundnut Oil',src:'Saurashtra',pk:'05 Jun',p:1150,m:1320,grade:'Cold pressed',cat:['premium']},
+  {n:'Jaggery Powder',src:'Kolhapur',pk:'11 Jun',p:95,m:120,grade:'Chemical-free',cat:['fresh']},
+  {n:'Red Chilli Powder',src:'Guntur',pk:'09 Jun',p:240,m:295,grade:'Premium',cat:['premium']},
+  {n:'Moong Dal',src:'Rajasthan',pk:'10 Jun',p:140,m:175,grade:'Premium A',cat:['best']},
+  {n:'Ragi Flour',src:'Karnataka',pk:'07 Jun',p:88,m:110,grade:'Stone ground',cat:['fresh']}
+];
+
+const PACKS=[
+  {n:'Bachelor Pack',p:999,size:'1 person',dur:'2–3 weeks',items:'Rice 2kg, Atta 2kg, Dal 1kg, Oil 1L, Sugar 1kg, Tea 250g',save:'Save ~₹120*'},
+  {n:'Couple Pack',p:2499,size:'2 people',dur:'1 month',items:'Rice 5kg, Atta 5kg, Dals 3kg, Oil 2L, Sugar 2kg, Spice set',save:'Save ~₹320*'},
+  {n:'Small Family',p:4999,size:'3–4 people',dur:'1 month',items:'Rice 10kg, Atta 10kg, Dals 5kg, Oil 5L, Sugar 3kg, Spices, Tea',save:'Save ~₹600*'},
+  {n:'Medium Family',p:7999,size:'5–6 people',dur:'1 month',items:'Rice 15kg, Atta 15kg, Dals 8kg, Oil 8L, Sugar 5kg, Spices, Tea, Jaggery',save:'Save ~₹900*'},
+  {n:'Large Family',p:11999,size:'7+ / joint',dur:'1 month',items:'Rice 25kg, Atta 25kg, Dals 12kg, Oil 12L, Sugar 8kg, Full spice set',save:'Save ~₹1,400*'}
+];
+
+const SUBS=[
+  {n:'Monthly Essentials',d:'Core grains, dal, oil & sugar each month',p:'from ₹2,499/mo*'},
+  {n:'Family Savings',d:'Bigger basket, best combined savings',p:'from ₹4,999/mo*'},
+  {n:'Premium Quality',d:'Top-grade own-label premium range',p:'from ₹5,999/mo*'},
+  {n:'Custom Plan',d:'Built from your Auto Kirana List',p:'budget-based*'}
+];
+
+const KIRANA=[['Rice','10 kg','₹540'],['Wheat Flour','15 kg','₹765'],['Toor Dal','3 kg','₹480'],
+  ['Chana Dal','2 kg','₹260'],['Sugar','2 kg','₹110'],['Tea','1 kg','₹450'],['Oil','5 L','₹1,150']];
+
+/* ===========================================================================
+   RENDER
+   =========================================================================== */
+function prodCard(p){
+  return `<div class="card prod" data-cat="${p.cat.join(' ')}"
+      onclick="openProduct('${p.n}','${p.src} · packed ${p.pk}','₹${p.p}','₹${p.m}','${p.grade}')">
+    <div class="imgph">${p.n}</div>
+    <div class="b"><div class="n">${p.n}</div><div class="s">${p.src} · ${p.pk}</div>
+      <div><span class="p">₹${p.p}</span><span class="mkt">₹${p.m}</span> <span class="tag tag-save">fair*</span></div>
+      <button class="btn btn-sm btn-outline" style="width:100%;margin-top:10px" onclick="event.stopPropagation();alert('Added (dummy)')">+ Add to Cart</button>
+    </div></div>`;
+}
+document.getElementById('catGrid').innerHTML =
+  CATS.map(c=>`<div class="cat" onclick="document.getElementById('products').scrollIntoView()"><span class="e">${c.e}</span><span class="t">${c.t}</span></div>`).join('');
+
+document.getElementById('prodGrid').innerHTML = PRODUCTS.map(prodCard).join('');
+
+document.getElementById('packGrid').innerHTML = PACKS.map(p=>`
+  <div class="card pack">
+    <div class="imgph" style="height:80px;margin-bottom:10px">${p.n}</div>
+    <h3>${p.n}</h3>
+    <div class="price">₹${p.p.toLocaleString('en-IN')}<span style="font-size:12px;color:var(--muted)">*</span></div>
+    <div class="meta">${p.size} · ${p.dur}</div>
+    <span class="tag tag-save" style="margin-bottom:12px">${p.save}</span>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-sm btn-outline" onclick="openCombo('${p.n}','${p.size} · ${p.dur}','${p.items}','₹${p.p.toLocaleString('en-IN')}','${p.save}')">View Details</button>
+      <button class="btn btn-sm btn-primary" onclick="alert('Pack added (dummy)')">Add Pack</button>
+    </div></div>`).join('');
+
+document.getElementById('subGrid').innerHTML = SUBS.map(s=>`
+  <div class="card sub"><h3>${s.n}</h3><p>${s.d}</p>
+    <span class="tag tag-gold">${s.p}</span>
+    <button class="btn btn-sm btn-primary" style="width:100%;margin-top:14px" onclick="alert('Subscribed to ${s.n} (dummy)')">Choose Plan</button>
+  </div>`).join('');
+
+/* ===========================================================================
+   FILTER (product highlights)
+   =========================================================================== */
+function filterProds(btn,key){
+  document.querySelectorAll('#products .btn-sm').forEach(b=>{b.classList.remove('btn-primary');b.classList.add('btn-outline')});
+  btn.classList.add('btn-primary');btn.classList.remove('btn-outline');
+  document.querySelectorAll('#prodGrid .prod').forEach(card=>{
+    card.style.display = (key==='all' || card.dataset.cat.includes(key)) ? '' : 'none';
+  });
+}
+
+/* ===========================================================================
+   MODALS
+   =========================================================================== */
+function openModal(id){
+  document.querySelectorAll('#modalRoot .modal').forEach(m=>m.style.display='none');
+  document.getElementById(id).style.display='block';
+  if(id==='m-kirana') document.getElementById('k-items').innerHTML =
+    KIRANA.map(k=>`<div class="kitem"><span>${k[0]} · ${k[1]}</span><b>${k[2]}</b></div>`).join('');
+  document.getElementById('modalRoot').classList.add('open');
+}
+function closeModal(){document.getElementById('modalRoot').classList.remove('open');}
+
+function openProduct(name,src,price,mkt,grade){
+  document.getElementById('p-name').textContent=name;
+  document.getElementById('p-src').textContent=src;
+  document.getElementById('p-price').textContent=price;
+  document.getElementById('p-mkt').textContent=mkt;
+  document.getElementById('p-grade').textContent=grade;
+  document.getElementById('p-save').textContent='Fair price*';
+  openModal('m-product');
+}
+function openCombo(name,meta,items,price,save){
+  document.getElementById('c-name').textContent=name;
+  document.getElementById('c-meta').textContent=meta;
+  document.getElementById('c-price').textContent=price;
+  document.getElementById('c-save').textContent=save;
+  document.getElementById('c-items').innerHTML = items.split(',').map(x=>`<div class="kitem"><span>${x.trim()}</span><b>✓</b></div>`).join('');
+  openModal('m-combo');
+}
+// close menu when a nav link is tapped (mobile)
+document.querySelectorAll('#menu a').forEach(a=>a.addEventListener('click',()=>document.getElementById('menu').classList.remove('open')));
+</script>
+</body>
+</html>
