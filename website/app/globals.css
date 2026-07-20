@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+/* ── FarmFresh brand tokens — "Terracotta & Sage" theme ─────────────────── */
+@theme {
+  /* Primary: warm terracotta / clay */
+  --color-brand: #b65b3c;
+  --color-brand-dark: #96482c;
+  --color-brand-soft: #f6e7df;
+
+  /* Secondary: muted sage green */
+  --color-sage: #6b7a55;
+  --color-sage-dark: #55613f;
+  --color-sage-soft: #e9ede1;
+
+  /* Accent: warm amber */
+  --color-gold: #e0a458;
+  --color-gold-soft: #fbefd9;
+  --color-amber-ink: #9a5a24;
+
+  /* Neutrals: oat canvas + cocoa ink + espresso for dark sections */
+  --color-beige: #faf6ef; /* oat canvas */
+  --color-beige-deep: #efe6d6;
+  --color-ink: #33291f; /* cocoa */
+  --color-muted: #8a7e70;
+  --color-line: #e7decf;
+  --color-espresso: #26201a;
+
+  --font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+}
+
+/* Marquee for the value banner */
+@keyframes ff-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ff-marquee {
+  animation: ff-marquee 28s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ff-marquee {
+    animation: none;
+  }
+}
+
+/* Subtle rise-in on scroll targets (progressive enhancement, no JS needed) */
+.ff-rise {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: ff-rise-in 0.7s ease forwards;
+}
+@keyframes ff-rise-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ff-rise {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}

@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* FarmFresh brand tokens — generate utilities like bg-brand, text-gold, etc. */
+@theme {
+  --color-brand: #2f6b46;
+  --color-brand-dark: #1f4a30;
+  --color-brand-soft: #eaf2ec;
+  --color-beige: #f5efe3;
+  --color-beige-deep: #e9dfca;
+  --color-gold: #c9a24b;
+  --color-gold-soft: #f4ecd8;
+  --color-ink: #26312b;
+  --color-muted: #7b857f;
+  --color-line: #e7e3d8;
+}
+
+html,
+body {
+  background: #f2f4f1;
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}

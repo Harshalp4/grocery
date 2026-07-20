@@ -1,0 +1,228 @@
+// FarmFresh data model. SQLite for local dev; swap `provider` to "postgresql"
+// (and DATABASE_URL) for production — the models are portable.
+//
+// SQLite has no array/enum types, so list-ish fields (tags) are stored as a
+// comma-separated string and nutrition as a JSON string; the API layer
+// converts them back to arrays/objects so responses match the app's models.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  name      String
+  emoji     String
+  sortOrder Int       @default(0)
+  products  Product[]
+}
+
+model Product {
+  id           String   @id
+  name         String
+  source       String
+  packedDate   String
+  price        Int
+  marketPrice  Int
+  grade        String
+  tags         String   @default("") // comma-separated: best,fresh,premium
+  harvestMonth String?
+  packSize     String?
+  nutrition    String   @default("{}") // JSON string
+  imageUrl     String? // relative path e.g. /uploads/toor-dal.png
+  stock        Int      @default(20) // used when the product has no variants
+  category     Category @relation(fields: [categorySlug], references: [slug])
+  categorySlug String
+  reviews      Review[]
+  variants     ProductVariant[]
+}
+
+// A pack-size variant of a product (500 g / 1 kg / 5 kg …), each with its own
+// price and stock. A product with no variants uses its own price/stock.
+model ProductVariant {
+  id          String  @id @default(cuid())
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String
+  label       String // "1 kg"
+  price       Int
+  marketPrice Int     @default(0)
+  stock       Int     @default(20)
+  sortOrder   Int     @default(0)
+
+  @@index([productId])
+}
+
+model Review {
+  id        String  @id @default(cuid())
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  initials  String
+  author    String
+  area      String
+  rating    Int
+  text      String
+}
+
+model ComboPack {
+  id          String @id
+  name        String
+  type        String // family | health | festival
+  price       Int
+  size        String
+  duration    String
+  items       String
+  savingsNote String
+}
+
+model SubscriptionPlan {
+  id          String @id
+  name        String
+  description String
+  priceLabel  String
+}
+
+// Seeded basket lines used by the Auto Kirana template and Repeat Last Month.
+model BasketLine {
+  id         String @id @default(cuid())
+  list       String // "kirana" | "repeat"
+  name       String
+  quantity   String
+  priceLabel String
+  sortOrder  Int    @default(0)
+}
+
+// A registered customer, identified by phone (verified via OTP).
+model User {
+  id        String    @id @default(cuid())
+  phone     String    @unique
+  name      String?
+  createdAt DateTime  @default(now())
+  orders    Order[]
+  addresses Address[]
+}
+
+// A saved delivery address belonging to a user.
+model Address {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  label     String   @default("Home") // Home, Office, …
+  line      String
+  area      String?
+  city      String?
+  pincode   String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Available delivery slots (manageable data, not hardcoded in the app).
+model DeliverySlot {
+  id        String  @id @default(cuid())
+  label     String
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
+}
+
+// Pincodes / zones the store delivers to, with a delivery ETA label.
+model ServiceableArea {
+  id        String  @id @default(cuid())
+  pincode   String  @unique
+  area      String?
+  city      String?
+  etaLabel  String  @default("Next day")
+  active    Boolean @default(true)
+}
+
+// A delivery rider (assigned to orders by admin).
+model DeliveryPartner {
+  id     String  @id @default(cuid())
+  name   String
+  phone  String
+  active Boolean @default(true)
+  orders Order[]
+}
+
+// One-time passwords for phone login. Latest code per phone; short expiry.
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
+
+// Customer orders. Optionally linked to a User (guest checkout still allowed).
+// Money is stored in whole rupees to match the app.
+model Order {
+  id            String      @id @default(cuid())
+  code          String      @unique // human-friendly, e.g. FF-20260717-0001
+  user          User?       @relation(fields: [userId], references: [id])
+  userId        String?
+  customerName  String
+  phone         String
+  address       String
+  slot          String
+  itemTotal     Int
+  savings       Int         @default(0)
+  deliveryFee   Int         @default(0)
+  total         Int
+  paymentMethod String // upi | card | cod
+  paymentStatus String      @default("pending") // pending | paid | failed
+  paymentRef    String? // gateway payment id (Razorpay), when online
+  status        String      @default("placed") // placed | confirmed | packed | out_for_delivery | delivered | cancelled
+  eta           String? // e.g. "Tomorrow by 11 AM"
+  deliveryPartner   DeliveryPartner? @relation(fields: [deliveryPartnerId], references: [id])
+  deliveryPartnerId String?
+  items         OrderItem[]
+  events        OrderEvent[]
+  returnRequest ReturnRequest?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// Status-change history for an order (the tracking timeline).
+model OrderEvent {
+  id        String   @id @default(cuid())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  status    String
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// A customer's request to return/refund an order (or report an issue).
+model ReturnRequest {
+  id        String   @id @default(cuid())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String   @unique
+  userId    String?
+  reason    String
+  status    String   @default("requested") // requested | approved | rejected | refunded
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id         String  @id @default(cuid())
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String
+  productId  String? // for stock decrement / reorder
+  variantId  String?
+  name       String
+  quantity   String
+  priceLabel String
+  price      Int     @default(0)
+}
