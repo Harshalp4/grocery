@@ -1,0 +1,51 @@
+# macOS
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.iml
+*.swp
+
+# Env files (each app also ignores its own; real secrets never committed)
+**/.env
+**/.env.local
+!**/.env.example
+!**/.env.local.example
+
+# Scratch / logs
+*.log
+
+# ---- Dependencies ----
+node_modules/
+**/node_modules/
+
+# ---- Node / Next.js (admin, website, legacy express backend) ----
+.next/
+**/.next/
+out/
+**/out/
+.turbo/
+.vercel/
+*.tsbuildinfo
+
+# ---- .NET (backend-dotnet) ----
+[Bb]in/
+[Oo]bj/
+*.user
+# local SQLite scratch DBs (project uses Postgres)
+*.db
+*.db-shm
+*.db-wal
+
+# ---- Flutter / Dart (farmfresh, partner) ----
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+**/build/
+**/.gradle/
+**/ephemeral/
