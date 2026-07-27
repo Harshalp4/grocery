@@ -39,11 +39,12 @@ public class JwtService
     }, TimeSpan.FromHours(12));
 
     /// Issue a 30d customer token.
-    public string SignCustomerToken(string userId, string phone) => Sign(new[]
+    public string SignCustomerToken(string userId, string phone, int tokenVersion) => Sign(new[]
     {
         new Claim("sub", userId),
         new Claim("phone", phone),
         new Claim("role", "customer"),
+        new Claim("tv", tokenVersion.ToString()),   // revocation guard
     }, TimeSpan.FromDays(30));
 
     /// Issue a 7d delivery-partner token. The `tv` claim enables instant revocation.

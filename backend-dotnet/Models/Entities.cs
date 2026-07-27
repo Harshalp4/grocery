@@ -154,6 +154,9 @@ public class User
     public string Phone { get; set; } = "";
     public string? Name { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    // Bumped to invalidate all outstanding tokens (logout-everywhere). A token's
+    // "tv" claim must match, so a deleted/rotated session is rejected server-side.
+    public int TokenVersion { get; set; }
     public List<Order> Orders { get; set; } = new();
     public List<Address> Addresses { get; set; } = new();
     public List<CartItem> CartItems { get; set; } = new();

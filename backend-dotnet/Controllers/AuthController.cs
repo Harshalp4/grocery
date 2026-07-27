@@ -87,7 +87,7 @@ public class AuthController : ControllerBase
         }
         await _db.SaveChangesAsync();
 
-        var token = _jwt.SignCustomerToken(user.Id, user.Phone);
+        var token = _jwt.SignCustomerToken(user.Id, user.Phone, user.TokenVersion);
         return Ok(new { token, user = new { id = user.Id, phone = user.Phone, name = user.Name } });
     }
 

@@ -43,6 +43,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
             ClockSkew = TimeSpan.FromMinutes(1),
         };
+        // Server-side revocation for customer tokens: reject if the user was
+        // deleted, or if their TokenVersion has moved on (logout-everywhere).
+        // Admin tokens have no user row and partner tokens self-validate in
+        // LoadPartner, so both are skipped.
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async ctx =>
+            {
+                if (ctx.Principal?.FindFirst("role")?.Value != "customer") return;
+                var sub = ctx.Principal.FindFirst("sub")?.Value;
+                var tv = ctx.Principal.FindFirst("tv")?.Value;
+                var db = ctx.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var current = await db.Users.AsNoTracking()
+                    .Where(u => u.Id == sub)
+                    .Select(u => (int?)u.TokenVersion)
+                    .FirstOrDefaultAsync();
+                if (current == null || tv != current.Value.ToString())
+                    ctx.Fail("Token no longer valid");
+            },
+        };
     });
 
 builder.Services.AddAuthorization(options =>
