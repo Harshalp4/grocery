@@ -151,12 +151,25 @@ public class AdminUser
 public class User
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    // Email is the primary login identity (email OTP + Google/Apple all resolve
+    // to an email). Phone is now the delivery mobile number, collected in the
+    // profile step; the legacy SMS-OTP flow still logs in by phone.
+    public string? Email { get; set; }
     public string Phone { get; set; } = "";
     public string? Name { get; set; }
+    // Linked social identities (subject ids from the provider), for account
+    // matching when the same person signs in a different way.
+    public string? GoogleId { get; set; }
+    public string? AppleId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     // Bumped to invalidate all outstanding tokens (logout-everywhere). A token's
     // "tv" claim must match, so a deleted/rotated session is rejected server-side.
     public int TokenVersion { get; set; }
+
+    /// True once the mandatory profile (name + a valid mobile) is filled in.
+    public bool ProfileComplete =>
+        !string.IsNullOrWhiteSpace(Name) &&
+        new string(Phone.Where(char.IsDigit).ToArray()).Length >= 8;
     public List<Order> Orders { get; set; } = new();
     public List<Address> Addresses { get; set; } = new();
     public List<CartItem> CartItems { get; set; } = new();
@@ -312,7 +325,8 @@ public class PartnerLocation
 public class OtpCode
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
-    public string Phone { get; set; } = "";
+    public string Phone { get; set; } = "";     // legacy SMS OTP identity
+    public string? Email { get; set; }           // email OTP identity
     public string Code { get; set; } = "";
     public DateTime ExpiresAt { get; set; }
     public bool Consumed { get; set; }

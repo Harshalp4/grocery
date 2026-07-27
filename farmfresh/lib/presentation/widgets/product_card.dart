@@ -7,6 +7,7 @@ import '../../core/theme/theme_ext.dart';
 import '../../core/widgets/bottom_sheet_shell.dart';
 import '../../core/widgets/image_placeholder.dart';
 import '../../domain/entities/product.dart';
+import '../features/auth/sign_in_sheet.dart';
 import '../providers/cart_controller.dart';
 
 /// The `.prod` card: image, name, source, price vs. market, stock state, and a
@@ -28,7 +29,10 @@ class ProductCard extends ConsumerWidget {
         product.stock <= 5;
 
     return GestureDetector(
-      onTap: onTap,
+      // Guests are prompted to sign in before opening a product.
+      onTap: () async {
+        if (await ensureSignedIn(context, ref)) onTap();
+      },
       child: Container(
         decoration: BoxDecoration(
           color: c.surface,
@@ -137,7 +141,10 @@ class ProductCard extends ConsumerWidget {
     );
   }
 
-  void _add(BuildContext context, WidgetRef ref) {
+  Future<void> _add(BuildContext context, WidgetRef ref) async {
+    // Adding to cart requires an account.
+    if (!await ensureSignedIn(context, ref)) return;
+    if (!context.mounted) return;
     if (product.hasVariants) {
       _showVariantPicker(context, ref);
     } else {

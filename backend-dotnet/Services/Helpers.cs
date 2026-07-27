@@ -28,8 +28,11 @@ public static class Otp
     public static bool DevMode =>
         Environment.GetEnvironmentVariable("OTP_DEV_MODE") != "false";
 
-    /// A 4-digit OTP (1000–9999).
+    /// A 4-digit OTP (1000–9999) — legacy SMS.
     public static string Generate() => (1000 + Rng.Next(9000)).ToString();
+
+    /// A 6-digit OTP (100000–999999) — email.
+    public static string Generate6() => (100000 + Rng.Next(900000)).ToString();
 
     /// Deliver the OTP. In dev this just logs it; wire MSG91/Twilio here for prod.
     public static void SendSms(string phone, string code)

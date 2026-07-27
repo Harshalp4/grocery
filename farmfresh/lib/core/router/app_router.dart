@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../presentation/features/ai/ai_assistant_page.dart';
+import '../../presentation/features/auth/complete_profile_page.dart';
+import '../../presentation/features/auth/email_otp_page.dart';
 import '../../presentation/features/auth/login_page.dart';
+import '../../presentation/features/auth/sign_in_page.dart';
 import '../../presentation/features/cart/cart_page.dart';
 import '../../presentation/features/cart/checkout_page.dart';
 import '../../presentation/features/combos/combos_page.dart';
@@ -32,7 +35,25 @@ abstract class AppRouter {
     initialLocation: '/',
     routes: [
       GoRoute(path: '/', builder: (_, __) => const SplashPage()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+      GoRoute(
+        path: '/login',
+        builder: (_, __) => const SignInPage(),
+        routes: [
+          GoRoute(
+            path: 'otp',
+            builder: (_, s) {
+              final extra = (s.extra as Map?) ?? const {};
+              return EmailOtpPage(
+                email: extra['email'] as String? ?? '',
+                devOtp: extra['devOtp'] as String?,
+              );
+            },
+          ),
+          // Legacy phone SMS-OTP login, kept for later use.
+          GoRoute(path: 'phone', builder: (_, __) => const LoginPage()),
+        ],
+      ),
+      GoRoute(path: '/complete-profile', builder: (_, __) => const CompleteProfilePage()),
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => MainShell(shell: shell),
         branches: [
