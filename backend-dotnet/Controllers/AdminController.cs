@@ -451,7 +451,8 @@ public class AdminController : ControllerBase
                 return BadRequest(new { error = "Partner not found or inactive" });
             order.AssignedAt = DateTime.UtcNow;
             _db.OrderEvents.Add(new OrderEvent { OrderId = order.Id, Status = order.Status, Note = "Assigned to delivery partner" });
-            // TODO(Phase 7): push "New order assigned" to the rider's device.
+            await Services.Notify.ToPartner(_db, partner.Id, "New delivery assigned",
+                $"Order {order.Code} is ready for pickup.", order.Id);
         }
         else
         {

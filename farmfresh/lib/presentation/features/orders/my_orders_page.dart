@@ -11,11 +11,24 @@ import '../../providers/auth_controller.dart';
 import '../../providers/repository_providers.dart';
 
 /// My Orders — the signed-in user's order history (GET /auth/orders).
-class MyOrdersPage extends ConsumerWidget {
+class MyOrdersPage extends ConsumerStatefulWidget {
   const MyOrdersPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyOrdersPage> createState() => _MyOrdersPageState();
+}
+
+class _MyOrdersPageState extends ConsumerState<MyOrdersPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Refetch on open so rider/admin-pushed status changes show without a
+    // manual pull-to-refresh.
+    Future.microtask(() => ref.invalidate(myOrdersProvider));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final c = context.colors;
     final signedIn = ref.watch(authControllerProvider).isAuthenticated;
 

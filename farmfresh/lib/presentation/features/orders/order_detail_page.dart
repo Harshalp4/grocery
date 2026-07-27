@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 
+import 'tracking_map.dart';
 import '../../../core/theme/dimens.dart';
 import '../../../core/theme/theme_ext.dart';
 import '../../../core/widgets/app_card.dart';
@@ -19,7 +23,7 @@ int _lineTotal(BasketLine item) {
   return unit * item.qty;
 }
 
-class OrderDetailPage extends ConsumerWidget {
+class OrderDetailPage extends ConsumerStatefulWidget {
   const OrderDetailPage({super.key, required this.orderId});
   final String orderId;
 
@@ -33,7 +37,37 @@ class OrderDetailPage extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrderDetailPage> createState() => _OrderDetailPageState();
+}
+
+class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
+  String get orderId => widget.orderId;
+  Timer? _poll;
+
+  @override
+  void initState() {
+    super.initState();
+    // Refetch on open so the timeline reflects rider-pushed status without a
+    // manual pull-to-refresh.
+    Future.microtask(() => ref.invalidate(orderDetailProvider(orderId)));
+    // While a rider is delivering, poll for their live position.
+    _poll = Timer.periodic(const Duration(seconds: 15), (_) {
+      final o = ref.read(orderDetailProvider(orderId)).valueOrNull;
+      if (o == null) return;
+      if (o.status == 'out_for_delivery') {
+        ref.invalidate(orderDetailProvider(orderId));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final c = context.colors;
     final async = ref.watch(orderDetailProvider(orderId));
 
@@ -71,6 +105,32 @@ class OrderDetailPage extends ConsumerWidget {
                 Text(o.eta!, style: TextStyle(fontSize: 13, color: c.muted)),
               ],
               const SizedBox(height: 16),
+
+              // Live rider map (only while out for delivery with a fresh fix).
+              if (o.hasLiveRider) ...[
+                TrackingMap(
+                  rider: LatLng(o.partnerLat!, o.partnerLng!),
+                  destination: (o.destLat != null && o.destLng != null)
+                      ? LatLng(o.destLat!, o.destLng!)
+                      : null,
+                  updatedAt: o.partnerLocationAt,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.delivery_dining, size: 18, color: c.green),
+                    const SizedBox(width: 6),
+                    Text(
+                      o.partnerName != null
+                          ? '${o.partnerName} is on the way'
+                          : 'Your order is on the way',
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Timeline
               if (o.status != 'cancelled')

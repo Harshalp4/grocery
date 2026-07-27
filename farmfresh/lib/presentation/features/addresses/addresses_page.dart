@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/theme/dimens.dart';
 import '../../../core/theme/theme_ext.dart';
@@ -10,6 +11,7 @@ import '../../../core/widgets/bottom_sheet_shell.dart';
 import '../../../domain/entities/address.dart';
 import '../../providers/auth_controller.dart';
 import '../../providers/repository_providers.dart';
+import '../address/map_picker_page.dart';
 
 /// Address book — list, add, edit and delete the user's saved addresses.
 class AddressesPage extends ConsumerWidget {
@@ -181,8 +183,31 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
   late final _pincode =
       TextEditingController(text: widget.existing?.pincode ?? '');
   late bool _isDefault = widget.existing?.isDefault ?? false;
+  late double? _lat = widget.existing?.lat;
+  late double? _lng = widget.existing?.lng;
   bool _saving = false;
   String? _error;
+
+  Future<void> _pickOnMap() async {
+    final start = (_lat != null && _lng != null) ? LatLng(_lat!, _lng!) : null;
+    final picked = await Navigator.of(context).push<PickedLocation>(
+      MaterialPageRoute(builder: (_) => MapPickerPage(initial: start)),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _lat = picked.lat;
+      _lng = picked.lng;
+      final a = picked.address;
+      // Prefill any empty fields from the reverse-geocode; don't clobber what
+      // the user already typed.
+      if (a != null) {
+        if (_line.text.trim().isEmpty && a.line != null) _line.text = a.line!;
+        if (_area.text.trim().isEmpty && a.area != null) _area.text = a.area!;
+        if (a.city != null) _city.text = a.city!;
+        if (a.pincode != null) _pincode.text = a.pincode!;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -208,6 +233,8 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
       city: _city.text.trim(),
       pincode: _pincode.text.trim(),
       isDefault: _isDefault,
+      lat: _lat,
+      lng: _lng,
     );
     try {
       final repo = ref.read(addressRepositoryProvider);
@@ -234,6 +261,16 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          OutlinedButton.icon(
+            onPressed: _pickOnMap,
+            icon: const Icon(Icons.map_outlined, size: 18),
+            label: Text(_lat != null ? 'Location pinned · edit on map' : 'Pin on map'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: context.colors.green,
+              minimumSize: const Size.fromHeight(44),
+            ),
+          ),
+          const SizedBox(height: 12),
           _field('Label', _label, hint: 'Home / Office'),
           _field('Address line', _line, hint: 'Flat, building, street'),
           Row(

@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/push_service.dart';
 import 'data/api_client.dart';
 import 'data/partner_repository.dart';
 import 'data/partner_token.dart';
@@ -80,6 +82,14 @@ class AuthController extends Notifier<AuthState> {
     await _prefs.setString(_kToken, r.token);
     await _prefs.setString(_kPartner, jsonEncode(_toJson(r.partner)));
     state = AuthState(partner: r.partner);
+    // Register this device for push now that we're authed (no-op if push off).
+    unawaited(_registerPush());
+  }
+
+  Future<void> _registerPush() async {
+    final token = await PushService.deviceToken();
+    if (token == null) return;
+    await ref.read(partnerRepositoryProvider).registerDevice(token);
   }
 
   Map<String, dynamic> _toJson(Partner p) => {

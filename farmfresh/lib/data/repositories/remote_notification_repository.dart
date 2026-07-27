@@ -24,6 +24,10 @@ class RemoteNotificationRepository implements NotificationRepository {
   Future<void> markAllRead() =>
       _api.postJson('/notifications/read-all', const <String, dynamic>{});
 
+  @override
+  Future<void> registerToken(String token, {String platform = 'android'}) =>
+      _api.postJson('/notifications/token', {'token': token, 'platform': platform});
+
   AppNotification _fromJson(Map<String, dynamic> j) => AppNotification(
         id: j['id'] as String,
         title: j['title'] as String,

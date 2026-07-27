@@ -60,6 +60,20 @@ class PartnerRepository {
   Future<DeliverySummary> summary() async =>
       DeliverySummary.fromJson(await _api.getJson('/partner/summary') as Map<String, dynamic>);
 
+  /// Push a live-location ping so the customer's tracking map can follow us.
+  Future<void> sendLocation(double lat, double lng) async {
+    try {
+      await _api.postJson('/partner/me/location', {'lat': lat, 'lng': lng});
+    } catch (_) {/* best effort — don't interrupt the delivery */}
+  }
+
+  /// Register this device's FCM token so the backend can push order alerts.
+  Future<void> registerDevice(String token, {String platform = 'android'}) async {
+    try {
+      await _api.postJson('/partner/me/device', {'token': token, 'platform': platform});
+    } catch (_) {/* best effort */}
+  }
+
   Future<void> logout() async {
     try {
       await _api.postJson('/partner/auth/logout', const {});

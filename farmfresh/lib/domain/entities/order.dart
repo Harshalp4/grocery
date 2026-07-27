@@ -16,6 +16,8 @@ class OrderInput {
     required this.deliveryFee,
     required this.total,
     this.couponCode,
+    this.destLat,
+    this.destLng,
   });
 
   final String customerName;
@@ -29,6 +31,8 @@ class OrderInput {
   final int deliveryFee;
   final int total;
   final String? couponCode;
+  final double? destLat;
+  final double? destLng;
 }
 
 /// Result of validating a coupon against the current cart total.

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'core/config/api_config.dart';
+import 'core/push/push_service.dart';
 import 'data/datasources/api_client.dart';
 import 'data/datasources/auth_token.dart';
 import 'data/repositories/remote_address_repository.dart';
@@ -23,6 +24,8 @@ import 'presentation/providers/repository_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Best-effort FCM init — no-ops without a real Firebase config.
+  await PushService.init();
   final prefs = await SharedPreferences.getInstance();
   // Restore the saved token into the holder before the first API call so the
   // shared ApiClient is authenticated from the start.
@@ -66,6 +69,7 @@ Future<void> main() async {
   // Restore the saved server cart if a session was loaded from storage.
   if (AuthToken.value != null) {
     unawaited(container.read(cartControllerProvider.notifier).loadFromServer());
+    unawaited(_registerPushToken(container));
   }
 
   runApp(
@@ -74,4 +78,13 @@ Future<void> main() async {
       child: const FarmFreshApp(),
     ),
   );
+}
+
+/// Register the device's FCM token with the backend (no-op if push is off).
+Future<void> _registerPushToken(ProviderContainer container) async {
+  final token = await PushService.deviceToken();
+  if (token == null) return;
+  try {
+    await container.read(notificationRepositoryProvider).registerToken(token);
+  } catch (_) {/* best effort */}
 }

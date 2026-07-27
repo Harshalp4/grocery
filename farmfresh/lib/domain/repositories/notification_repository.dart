@@ -10,4 +10,7 @@ abstract interface class NotificationRepository {
   Future<List<AppNotification>> list();
   Future<int> unreadCount();
   Future<void> markAllRead();
+
+  /// Register/refresh this device's FCM token (POST /notifications/token).
+  Future<void> registerToken(String token, {String platform});
 }

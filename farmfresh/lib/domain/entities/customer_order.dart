@@ -41,6 +41,11 @@ class CustomerOrder {
     this.partnerName,
     this.returnStatus,
     this.events = const [],
+    this.destLat,
+    this.destLng,
+    this.partnerLat,
+    this.partnerLng,
+    this.partnerLocationAt,
   });
 
   final String id;
@@ -60,10 +65,19 @@ class CustomerOrder {
   final String? partnerName;
   final String? returnStatus; // requested | approved | rejected | refunded
   final List<OrderEvent> events;
+  final double? destLat;
+  final double? destLng;
+  final double? partnerLat;
+  final double? partnerLng;
+  final DateTime? partnerLocationAt;
 
   String get statusLabel => orderStatusLabel(status);
   bool get isCancellable => status == 'placed' || status == 'confirmed';
   bool get canReport => status == 'delivered' && returnStatus == null;
+
+  /// The rider is actively delivering and we have a fresh-enough fix to map.
+  bool get hasLiveRider =>
+      status == 'out_for_delivery' && partnerLat != null && partnerLng != null;
 }
 
 /// Result of a serviceability check for a pincode.

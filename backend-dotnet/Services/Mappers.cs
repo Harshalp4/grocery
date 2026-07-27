@@ -111,6 +111,8 @@ public static class Mappers
         paymentRef = o.PaymentRef,
         status = o.Status,
         eta = o.Eta,
+        destLat = o.DestLat,                  // delivery location (customer map)
+        destLng = o.DestLng,
         deliveryOtp = o.DeliveryOtp,          // shown to the customer once out for delivery
         deliveredAt = o.DeliveredAt,
         deliveryPartnerId = o.DeliveryPartnerId,
@@ -142,6 +144,11 @@ public static class Mappers
             name = o.DeliveryPartner.Name,
             phone = o.DeliveryPartner.Phone,
             active = o.DeliveryPartner.Active,
+            // Live location for the customer's tracking map (only meaningful
+            // while the rider is on duty and out for delivery).
+            lastLat = o.DeliveryPartner.LastLat,
+            lastLng = o.DeliveryPartner.LastLng,
+            lastLocationAt = o.DeliveryPartner.LastLocationAt,
         },
         returnRequest = o.ReturnRequest == null ? null : new
         {

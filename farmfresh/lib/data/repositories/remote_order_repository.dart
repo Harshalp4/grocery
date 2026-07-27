@@ -33,6 +33,8 @@ class RemoteOrderRepository implements OrderRepository {
       'deliveryFee': input.deliveryFee,
       'total': input.total,
       if (input.couponCode != null) 'couponCode': input.couponCode,
+      if (input.destLat != null) 'destLat': input.destLat,
+      if (input.destLng != null) 'destLng': input.destLng,
     }) as Map<String, dynamic>;
 
     return OrderConfirmation(
@@ -115,6 +117,12 @@ class RemoteOrderRepository implements OrderRepository {
       eta: j['eta'] as String?,
       partnerName: partner?['name'] as String?,
       returnStatus: ret?['status'] as String?,
+      destLat: (j['destLat'] as num?)?.toDouble(),
+      destLng: (j['destLng'] as num?)?.toDouble(),
+      partnerLat: (partner?['lastLat'] as num?)?.toDouble(),
+      partnerLng: (partner?['lastLng'] as num?)?.toDouble(),
+      partnerLocationAt:
+          DateTime.tryParse(partner?['lastLocationAt'] as String? ?? ''),
       createdAt:
           DateTime.tryParse(j['createdAt'] as String? ?? '') ?? DateTime(2026),
       items: ((j['items'] as List<dynamic>?) ?? [])

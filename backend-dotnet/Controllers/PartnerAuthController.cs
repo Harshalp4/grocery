@@ -117,4 +117,24 @@ public class PartnerAuthController : PartnerBase
         await _db.SaveChangesAsync();
         return Ok(new { ok = true });
     }
+
+    // POST /partner/me/location { lat, lng } -> live location ping (used by the
+    // customer's order-tracking map). Also appends to the location trail.
+    [HttpPost("/partner/me/location")]
+    public async Task<IActionResult> Location([FromBody] JsonElement body)
+    {
+        var (me, err) = await LoadPartner(_db);
+        if (err != null) return err;
+        if (!body.TryGetProperty("lat", out var latEl) || latEl.ValueKind != JsonValueKind.Number ||
+            !body.TryGetProperty("lng", out var lngEl) || lngEl.ValueKind != JsonValueKind.Number)
+            return BadRequest(new { error = "lat and lng required" });
+        var lat = latEl.GetDouble();
+        var lng = lngEl.GetDouble();
+        me!.LastLat = lat;
+        me.LastLng = lng;
+        me.LastLocationAt = DateTime.UtcNow;
+        _db.PartnerLocations.Add(new PartnerLocation { PartnerId = me.Id, Lat = lat, Lng = lng });
+        await _db.SaveChangesAsync();
+        return Ok(new { ok = true });
+    }
 }

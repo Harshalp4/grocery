@@ -14,17 +14,20 @@ public class AddressesController : ControllerBase
     private readonly AppDbContext _db;
     public AddressesController(AppDbContext db) => _db = db;
 
-    private record AddressInput(string Label, string Line, string? Area, string? City, string? Pincode, bool IsDefault);
+    private record AddressInput(string Label, string Line, string? Area, string? City, string? Pincode,
+        bool IsDefault, double? Lat, double? Lng);
 
     private static AddressInput? Parse(JsonElement b)
     {
         if (b.ValueKind != JsonValueKind.Object) return null;
         string? Str(string k) => b.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+        double? Dbl(string k) => b.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : null;
         var line = Str("line");
         if (line == null || line.Length < 3) return null;  // zod: line min 3
         var label = Str("label") ?? "Home";
         var isDefault = b.TryGetProperty("isDefault", out var d) && d.ValueKind == JsonValueKind.True;
-        return new AddressInput(label, line, Str("area"), Str("city"), Str("pincode"), isDefault);
+        return new AddressInput(label, line, Str("area"), Str("city"), Str("pincode"), isDefault,
+            Dbl("lat"), Dbl("lng"));
     }
 
     // GET /addresses -> the user's saved addresses (default first)
@@ -62,6 +65,8 @@ public class AddressesController : ControllerBase
             City = p.City,
             Pincode = p.Pincode,
             IsDefault = makeDefault,
+            Lat = p.Lat,
+            Lng = p.Lng,
         };
         _db.Addresses.Add(row);
         await _db.SaveChangesAsync();
@@ -88,6 +93,8 @@ public class AddressesController : ControllerBase
         existing.City = p.City;
         existing.Pincode = p.Pincode;
         existing.IsDefault = p.IsDefault;
+        if (p.Lat.HasValue) existing.Lat = p.Lat;
+        if (p.Lng.HasValue) existing.Lng = p.Lng;
         await _db.SaveChangesAsync();
         return Ok(existing);
     }

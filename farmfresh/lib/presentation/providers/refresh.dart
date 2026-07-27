@@ -21,3 +21,11 @@ Future<void> refreshCatalogAsync(WidgetRef ref) async {
     ref.read(productsProvider.future),
   ]);
 }
+
+/// Invalidates the order reads (list + every detail) so status changes pushed
+/// by the rider/admin show up without a manual pull-to-refresh. Called on app
+/// resume and when the orders screens are opened.
+void refreshOrders(WidgetRef ref) {
+  ref.invalidate(myOrdersProvider);
+  ref.invalidate(orderDetailProvider);
+}

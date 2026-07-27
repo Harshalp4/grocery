@@ -13,4 +13,7 @@ class MockNotificationRepository implements NotificationRepository {
 
   @override
   Future<void> markAllRead() async {}
+
+  @override
+  Future<void> registerToken(String token, {String platform = 'android'}) async {}
 }

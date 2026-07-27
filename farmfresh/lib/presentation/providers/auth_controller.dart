@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/push/push_service.dart';
 import '../../data/datasources/auth_token.dart';
 import '../../domain/entities/app_user.dart';
 import 'repository_providers.dart';
@@ -51,6 +53,17 @@ class AuthController extends Notifier<AuthState> {
     await _prefs.setString(_kToken, session.token);
     await _prefs.setString(_kUser, jsonEncode(session.user.toJson()));
     state = AuthState(user: session.user);
+    // Register this device for push now that we're authenticated (no-op if
+    // push is unavailable).
+    unawaited(_registerPush());
+  }
+
+  Future<void> _registerPush() async {
+    final token = await PushService.deviceToken();
+    if (token == null) return;
+    try {
+      await ref.read(notificationRepositoryProvider).registerToken(token);
+    } catch (_) {/* best effort */}
   }
 
   Future<void> updateName(String name) async {

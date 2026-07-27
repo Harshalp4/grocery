@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../core/theme.dart';
 import '../domain/models.dart';
 import '../providers.dart';
+import 'delivery_map.dart';
 
 class OrderDetailPage extends ConsumerStatefulWidget {
   const OrderDetailPage({super.key, required this.orderId});
@@ -16,6 +21,57 @@ class OrderDetailPage extends ConsumerStatefulWidget {
 
 class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
   bool _busy = false;
+  LatLng? _me;
+  Timer? _locTimer;
+  bool _permAsked = false;
+
+  static const _activeStatuses = {'packed', 'picked_up', 'out_for_delivery'};
+
+  @override
+  void initState() {
+    super.initState();
+    // Ping location now and every 20s while the delivery is active, so the
+    // customer's tracking map can follow the rider.
+    _trackOnce();
+    _locTimer = Timer.periodic(const Duration(seconds: 20), (_) => _trackOnce());
+  }
+
+  @override
+  void dispose() {
+    _locTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _trackOnce() async {
+    final o = ref.read(orderDetailProvider(widget.orderId)).valueOrNull;
+    if (o == null || !_activeStatuses.contains(o.status)) return;
+    try {
+      if (!_permAsked) {
+        _permAsked = true;
+        var perm = await Geolocator.checkPermission();
+        if (perm == LocationPermission.denied) {
+          perm = await Geolocator.requestPermission();
+        }
+        if (perm == LocationPermission.denied ||
+            perm == LocationPermission.deniedForever) {
+          return;
+        }
+      }
+      if (!await Geolocator.isLocationServiceEnabled()) return;
+      // Prefer a fast last-known fix; fall back to a fresh one with a hard
+      // time limit so a slow GPS can never hang the UI.
+      Position? pos = await Geolocator.getLastKnownPosition();
+      pos ??= await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _me = LatLng(pos!.latitude, pos.longitude));
+      await ref.read(partnerRepositoryProvider).sendLocation(pos.latitude, pos.longitude);
+    } catch (_) {/* best effort */}
+  }
 
   Future<void> _run(Future<void> Function() op) async {
     setState(() => _busy = true);
@@ -56,6 +112,15 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              if (_activeStatuses.contains(o.status)) ...[
+                DeliveryMap(
+                  me: _me,
+                  destination: (o.destLat != null && o.destLng != null)
+                      ? LatLng(o.destLat!, o.destLng!)
+                      : null,
+                ),
+                const SizedBox(height: 12),
+              ],
               _card([
                 _row(Icons.person_outline, o.customerName),
                 if (o.phone != null) _row(Icons.phone_outlined, '+91 ${o.phone}'),

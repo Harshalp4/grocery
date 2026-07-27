@@ -322,6 +322,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       deliveryFee: deliveryFee,
       total: total,
       couponCode: cart.couponCode,
+      destLat: resolved.lat,
+      destLng: resolved.lng,
     );
 
     setState(() => _placing = true);

@@ -8,6 +8,8 @@ class Address {
     this.city,
     this.pincode,
     this.isDefault = false,
+    this.lat,
+    this.lng,
   });
 
   final String id;
@@ -17,6 +19,8 @@ class Address {
   final String? city;
   final String? pincode;
   final bool isDefault;
+  final double? lat;
+  final double? lng;
 
   /// Full one-line address for display and orders.
   String get formatted => [
@@ -36,6 +40,8 @@ class AddressInput {
     this.city,
     this.pincode,
     this.isDefault = false,
+    this.lat,
+    this.lng,
   });
 
   final String label;
@@ -44,4 +50,6 @@ class AddressInput {
   final String? city;
   final String? pincode;
   final bool isDefault;
+  final double? lat;
+  final double? lng;
 }

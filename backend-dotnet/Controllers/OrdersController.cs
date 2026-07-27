@@ -31,7 +31,10 @@ public class OrdersController : ControllerBase
 
         string? Str(string k) => body.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
         int Int(string k, int def = 0) => body.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetInt32() : def;
+        double? Dbl(string k) => body.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.Number ? v.GetDouble() : null;
 
+        var destLat = Dbl("destLat");
+        var destLng = Dbl("destLng");
         var customerName = Str("customerName");
         var phone = Str("phone");
         var address = Str("address");
@@ -159,6 +162,8 @@ public class OrdersController : ControllerBase
             PaymentRef = payment.Ref,
             Status = "placed",
             Eta = $"Delivery {slot}",
+            DestLat = destLat,
+            DestLng = destLng,
             Items = priced.Select(x => new OrderItem
             {
                 Name = x.item.Name,

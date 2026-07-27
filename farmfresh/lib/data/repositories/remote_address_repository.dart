@@ -37,6 +37,8 @@ class RemoteAddressRepository implements AddressRepository {
         'city': i.city,
         'pincode': i.pincode,
         'isDefault': i.isDefault,
+        if (i.lat != null) 'lat': i.lat,
+        if (i.lng != null) 'lng': i.lng,
       };
 
   Address _address(Map<String, dynamic> j) => Address(
@@ -47,5 +49,7 @@ class RemoteAddressRepository implements AddressRepository {
         city: j['city'] as String?,
         pincode: j['pincode'] as String?,
         isDefault: j['isDefault'] as bool? ?? false,
+        lat: (j['lat'] as num?)?.toDouble(),
+        lng: (j['lng'] as num?)?.toDouble(),
       );
 }

@@ -36,6 +36,7 @@ class _FarmFreshAppState extends ConsumerState<FarmFreshApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       refreshCatalog(ref);
+      refreshOrders(ref);
     }
   }
 
