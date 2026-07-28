@@ -14,6 +14,23 @@ using Microsoft.IdentityModel.Tokens;
 // mapping .NET applies by default — matches how jsonwebtoken signed them.
 JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
+// Load a local, gitignored .env into the process environment for dev secrets
+// (RESEND_API_KEY, FIREBASE_PROJECT_ID, ...) so they never live in the repo.
+// Real env vars always win. In production, set these on the host instead.
+if (File.Exists(".env"))
+{
+    foreach (var raw in File.ReadAllLines(".env"))
+    {
+        var line = raw.Trim();
+        var eq = line.IndexOf('=');
+        if (line.Length == 0 || line.StartsWith('#') || eq <= 0) continue;
+        var key = line[..eq].Trim();
+        var val = line[(eq + 1)..].Trim().Trim('"');
+        if (Environment.GetEnvironmentVariable(key) is null)
+            Environment.SetEnvironmentVariable(key, val);
+    }
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // --- Database: PostgreSQL via EF Core (Npgsql) ---
