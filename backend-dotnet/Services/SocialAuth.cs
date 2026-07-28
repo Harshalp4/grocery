@@ -4,11 +4,11 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace FarmFresh.Api.Services;
 
-/// Verifies Google / Apple identity tokens server-side. Both need their client
-/// id configured (GOOGLE_CLIENT_ID / APPLE_CLIENT_ID, comma-separated for
-/// multiple platforms); without it the corresponding provider is disabled and
-/// the endpoint returns a clear "not configured" error.
-public record SocialUser(string Subject, string? Email, string? Name);
+/// Verifies identity tokens server-side. The app signs Google/Apple in through
+/// Firebase Authentication and sends the resulting Firebase ID token, which is
+/// verified here (VerifyFirebase, needs FIREBASE_PROJECT_ID). The direct Google
+/// tokeninfo / Apple JWKS paths are kept as alternatives.
+public record SocialUser(string Subject, string? Email, string? Name, string? Provider = null);
 
 public static class SocialAuth
 {
@@ -20,6 +20,49 @@ public static class SocialAuth
 
     public static bool GoogleConfigured => Audiences("GOOGLE_CLIENT_ID").Length > 0;
     public static bool AppleConfigured => Audiences("APPLE_CLIENT_ID").Length > 0;
+    public static bool FirebaseConfigured =>
+        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("FIREBASE_PROJECT_ID"));
+
+    /// Validate a Firebase Authentication ID token (Google/Apple sign-in flow
+    /// through Firebase). Checks issuer + audience against FIREBASE_PROJECT_ID
+    /// and the signature against Google's securetoken public keys.
+    public static async Task<SocialUser?> VerifyFirebase(string idToken)
+    {
+        var projectId = Environment.GetEnvironmentVariable("FIREBASE_PROJECT_ID");
+        if (string.IsNullOrEmpty(projectId)) return null;
+        try
+        {
+            var jwks = await _http.GetStringAsync(
+                "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com");
+            var keys = new JsonWebKeySet(jwks).GetSigningKeys();
+            var result = new JwtSecurityTokenHandler().ValidateToken(idToken,
+                new TokenValidationParameters
+                {
+                    ValidIssuer = $"https://securetoken.google.com/{projectId}",
+                    ValidateIssuer = true,
+                    ValidAudience = projectId,
+                    ValidateAudience = true,
+                    IssuerSigningKeys = keys,
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
+                }, out _);
+            var sub = result.FindFirst("sub")?.Value ?? result.FindFirst("user_id")?.Value;
+            if (sub == null) return null;
+
+            // The provider (google.com / apple.com) is nested under the "firebase" claim.
+            string? provider = null;
+            var fb = result.FindFirst("firebase")?.Value;
+            if (fb != null)
+                try { provider = JsonDocument.Parse(fb).RootElement
+                    .GetProperty("sign_in_provider").GetString(); }
+                catch { /* leave null */ }
+
+            return new SocialUser(sub, result.FindFirst("email")?.Value,
+                result.FindFirst("name")?.Value,
+                provider switch { "google.com" => "google", "apple.com" => "apple", _ => null });
+        }
+        catch { return null; }
+    }
 
     /// Validate a Google ID token via Google's tokeninfo endpoint and check the
     /// audience matches one of our client ids. Returns null if invalid.

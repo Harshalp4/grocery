@@ -56,22 +56,18 @@ class AuthController extends Notifier<AuthState> {
     return _startSession(session);
   }
 
-  // ---- Social ----
-  /// Returns true on success (profile complete flag via [_startSession]),
-  /// throws [SocialSignInException] on config errors. Returns null if cancelled.
-  Future<bool?> signInWithGoogle() async {
-    final res = await SocialSignIn.google();
-    if (res == null) return null; // cancelled
-    final session = await ref.read(authRepositoryProvider).signInWithGoogle(res.idToken);
-    return _startSession(session);
-  }
+  // ---- Social (Google/Apple via Firebase Auth) ----
+  /// Returns true if the profile is already complete, false if the profile step
+  /// is needed, or null if the user cancelled. Throws [SocialSignInException] on
+  /// config errors.
+  Future<bool?> signInWithGoogle() => _firebaseSignIn(SocialSignIn.google);
+  Future<bool?> signInWithApple() => _firebaseSignIn(SocialSignIn.apple);
 
-  Future<bool?> signInWithApple() async {
-    final res = await SocialSignIn.apple();
-    if (res == null) return null; // cancelled
-    final session = await ref
-        .read(authRepositoryProvider)
-        .signInWithApple(res.identityToken, name: res.name);
+  Future<bool?> _firebaseSignIn(Future<String?> Function() getToken) async {
+    final firebaseIdToken = await getToken();
+    if (firebaseIdToken == null) return null; // cancelled
+    final session =
+        await ref.read(authRepositoryProvider).signInWithFirebase(firebaseIdToken);
     return _startSession(session);
   }
 

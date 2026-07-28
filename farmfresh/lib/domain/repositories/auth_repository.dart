@@ -5,8 +5,7 @@ import '../entities/app_user.dart';
 /// API mapping:
 ///   requestEmailOtp  -> POST /auth/email/request
 ///   verifyEmailOtp   -> POST /auth/email/verify
-///   signInWithGoogle -> POST /auth/google
-///   signInWithApple  -> POST /auth/apple
+///   signInWithFirebase -> POST /auth/firebase  (Google/Apple via Firebase Auth)
 ///   completeProfile  -> POST /auth/complete-profile
 ///   deleteAccount    -> DELETE /auth/me
 /// The legacy phone requestOtp/verifyOtp map to /auth/otp/* (kept for later).
@@ -15,9 +14,8 @@ abstract interface class AuthRepository {
   Future<OtpRequest> requestEmailOtp(String email);
   Future<AuthSession> verifyEmailOtp(String email, String code);
 
-  // --- Social ---
-  Future<AuthSession> signInWithGoogle(String idToken);
-  Future<AuthSession> signInWithApple(String identityToken, {String? name});
+  // --- Social (Google/Apple through Firebase Auth) ---
+  Future<AuthSession> signInWithFirebase(String firebaseIdToken);
 
   // --- Mandatory profile step (name + mobile) ---
   Future<AppUser> completeProfile(String name, String phone);

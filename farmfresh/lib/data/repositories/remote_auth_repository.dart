@@ -29,20 +29,11 @@ class RemoteAuthRepository implements AuthRepository {
     return _session(j);
   }
 
-  // ---- Social ----
+  // ---- Social (Google/Apple via Firebase Auth) ----
   @override
-  Future<AuthSession> signInWithGoogle(String idToken) async {
-    final j = await _api.postJson('/auth/google', {'idToken': idToken})
+  Future<AuthSession> signInWithFirebase(String firebaseIdToken) async {
+    final j = await _api.postJson('/auth/firebase', {'idToken': firebaseIdToken})
         as Map<String, dynamic>;
-    return _session(j);
-  }
-
-  @override
-  Future<AuthSession> signInWithApple(String identityToken, {String? name}) async {
-    final j = await _api.postJson('/auth/apple', {
-      'identityToken': identityToken,
-      if (name != null && name.isNotEmpty) 'name': name,
-    }) as Map<String, dynamic>;
     return _session(j);
   }
 

@@ -89,7 +89,23 @@ public class EmailAuthController : ControllerBase
         return Ok(AuthResult(user));
     }
 
+    // POST /auth/firebase { idToken } -> { token, profileComplete, user }
+    // The app's Google/Apple sign-in goes through Firebase Auth; this verifies
+    // the Firebase ID token (works for both providers).
+    [HttpPost("/auth/firebase")]
+    public async Task<IActionResult> Firebase([FromBody] JsonElement body)
+    {
+        if (!SocialAuth.FirebaseConfigured)
+            return StatusCode(501, new { error = "Firebase sign-in isn't configured on the server" });
+        var idToken = Str(body, "idToken");
+        if (string.IsNullOrEmpty(idToken)) return BadRequest(new { error = "idToken required" });
+        var info = await SocialAuth.VerifyFirebase(idToken);
+        if (info == null) return Unauthorized(new { error = "Invalid Firebase token" });
+        return Ok(AuthResult(await LinkOrCreate(info.Provider, info)));
+    }
+
     // POST /auth/google { idToken } -> { token, profileComplete, user }
+    // Direct Google-token path (alternative to Firebase).
     [HttpPost("/auth/google")]
     public async Task<IActionResult> Google([FromBody] JsonElement body)
     {
@@ -134,12 +150,15 @@ public class EmailAuthController : ControllerBase
     }
 
     /// Find the user by provider id, else by email (link accounts), else create.
-    private async Task<User> LinkOrCreate(string provider, SocialUser info)
+    private async Task<User> LinkOrCreate(string? provider, SocialUser info)
     {
         var email = NormEmail(info.Email);
-        var user = provider == "google"
-            ? await _db.Users.FirstOrDefaultAsync(u => u.GoogleId == info.Subject)
-            : await _db.Users.FirstOrDefaultAsync(u => u.AppleId == info.Subject);
+        User? user = provider switch
+        {
+            "google" => await _db.Users.FirstOrDefaultAsync(u => u.GoogleId == info.Subject),
+            "apple" => await _db.Users.FirstOrDefaultAsync(u => u.AppleId == info.Subject),
+            _ => null,
+        };
         user ??= email.Length > 0
             ? await _db.Users.FirstOrDefaultAsync(u => u.Email == email)
             : null;
@@ -149,7 +168,8 @@ public class EmailAuthController : ControllerBase
             _db.Users.Add(user);
         }
         if (email.Length > 0 && string.IsNullOrEmpty(user.Email)) user.Email = email;
-        if (provider == "google") user.GoogleId = info.Subject; else user.AppleId = info.Subject;
+        if (provider == "google") user.GoogleId = info.Subject;
+        else if (provider == "apple") user.AppleId = info.Subject;
         if (string.IsNullOrWhiteSpace(user.Name) && !string.IsNullOrWhiteSpace(info.Name))
             user.Name = info.Name!.Trim();
         await _db.SaveChangesAsync();

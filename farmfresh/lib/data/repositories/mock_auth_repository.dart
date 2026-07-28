@@ -25,12 +25,8 @@ class MockAuthRepository implements AuthRepository {
       _mock(email: email);
 
   @override
-  Future<AuthSession> signInWithGoogle(String idToken) async =>
-      _mock(email: 'guest@google.com', name: 'Google User');
-
-  @override
-  Future<AuthSession> signInWithApple(String identityToken, {String? name}) async =>
-      _mock(email: 'guest@apple.com', name: name);
+  Future<AuthSession> signInWithFirebase(String firebaseIdToken) async =>
+      _mock(email: 'guest@firebase.com', name: 'Social User');
 
   @override
   Future<AppUser> completeProfile(String name, String phone) async =>

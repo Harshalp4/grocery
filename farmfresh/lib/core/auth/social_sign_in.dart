@@ -1,8 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
-/// Thrown when a social sign-in can't complete (usually because OAuth isn't
-/// configured yet — see SOCIAL_SIGN_IN.md).
+/// Thrown when a social sign-in can't complete (usually because Firebase Auth
+/// isn't configured yet — see SOCIAL_SIGN_IN.md).
 class SocialSignInException implements Exception {
   SocialSignInException(this.message);
   final String message;
@@ -10,63 +11,75 @@ class SocialSignInException implements Exception {
   String toString() => message;
 }
 
-/// Native Google / Apple sign-in. Returns the provider tokens for the backend
-/// to verify, or null if the user cancels. Throws [SocialSignInException] with a
-/// friendly message when the provider isn't set up.
+/// Google / Apple sign-in through **Firebase Authentication**. Both return the
+/// Firebase ID token for the backend (`/auth/firebase`) to verify, or null if
+/// the user cancels. Throws [SocialSignInException] when Firebase isn't set up.
 abstract class SocialSignIn {
-  /// Optional web/server client id used to mint a backend-audience Google id
-  /// token. Pass with --dart-define=GOOGLE_SERVER_CLIENT_ID=... (Android reads
-  /// google-services.json when this is empty).
-  static const _googleServerClientId =
-      String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID', defaultValue: '');
+  static FirebaseAuth get _auth => FirebaseAuth.instance;
 
-  static Future<({String idToken})?> google() async {
+  static Future<String?> google() async {
     try {
-      final signIn = GoogleSignIn(
-        scopes: const ['email'],
-        serverClientId: _googleServerClientId.isEmpty ? null : _googleServerClientId,
-      );
-      final account = await signIn.signIn();
+      final account = await GoogleSignIn(scopes: const ['email']).signIn();
       if (account == null) return null; // cancelled
-      final auth = await account.authentication;
-      final token = auth.idToken;
-      if (token == null || token.isEmpty) {
-        throw SocialSignInException('Google sign-in isn\'t configured yet.');
-      }
-      return (idToken: token);
+      final gauth = await account.authentication;
+      final cred = GoogleAuthProvider.credential(
+        idToken: gauth.idToken,
+        accessToken: gauth.accessToken,
+      );
+      final result = await _auth.signInWithCredential(cred);
+      return _idToken(result);
     } on SocialSignInException {
       rethrow;
+    } on FirebaseAuthException catch (e) {
+      throw SocialSignInException(_friendly(e));
     } catch (_) {
       throw SocialSignInException('Google sign-in isn\'t available right now.');
     }
   }
 
-  static Future<({String identityToken, String? name})?> apple() async {
+  static Future<String?> apple() async {
     try {
       if (!await SignInWithApple.isAvailable()) {
         throw SocialSignInException('Apple sign-in isn\'t available on this device.');
       }
-      final cred = await SignInWithApple.getAppleIDCredential(
-        scopes: const [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
+      final apple = await SignInWithApple.getAppleIDCredential(scopes: const [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ]);
+      // Apple only returns the name on first sign-in — push it into the Firebase
+      // profile so /auth/firebase can read it from the token.
+      final cred = OAuthProvider('apple.com').credential(
+        idToken: apple.identityToken,
+        accessToken: apple.authorizationCode,
       );
-      final token = cred.identityToken;
-      if (token == null || token.isEmpty) {
-        throw SocialSignInException('Apple sign-in isn\'t configured yet.');
+      final result = await _auth.signInWithCredential(cred);
+      final name = [apple.givenName, apple.familyName]
+          .where((e) => e != null && e.isNotEmpty).join(' ').trim();
+      if (name.isNotEmpty && (result.user?.displayName ?? '').isEmpty) {
+        await result.user?.updateDisplayName(name);
       }
-      final name = [cred.givenName, cred.familyName]
-          .where((e) => e != null && e.isNotEmpty)
-          .join(' ')
-          .trim();
-      return (identityToken: token, name: name.isEmpty ? null : name);
+      return _idToken(result, forceRefresh: name.isNotEmpty);
     } on SignInWithAppleAuthorizationException {
-      return null; // cancelled / not authorized
+      return null; // cancelled
     } on SocialSignInException {
       rethrow;
+    } on FirebaseAuthException catch (e) {
+      throw SocialSignInException(_friendly(e));
     } catch (_) {
       throw SocialSignInException('Apple sign-in isn\'t available right now.');
     }
   }
+
+  static Future<String?> _idToken(UserCredential result, {bool forceRefresh = false}) async {
+    final token = await result.user?.getIdToken(forceRefresh);
+    if (token == null || token.isEmpty) {
+      throw SocialSignInException('Sign-in isn\'t configured yet.');
+    }
+    return token;
+  }
+
+  static String _friendly(FirebaseAuthException e) =>
+      e.code == 'operation-not-allowed' || e.code == 'configuration-not-found'
+          ? 'This sign-in method isn\'t enabled yet.'
+          : 'Sign-in failed. Please try again.';
 }
