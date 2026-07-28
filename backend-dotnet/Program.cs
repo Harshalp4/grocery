@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 
 // Keep raw JWT claim names ("sub", "role", "phone") instead of the SOAP-style
 // mapping .NET applies by default — matches how jsonwebtoken signed them.
@@ -33,17 +34,51 @@ if (File.Exists(".env"))
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Hosts (Render/Railway/Fly) inject the port to listen on. Bind to it on all
+// interfaces; local dev falls back to the appsettings "Urls" (localhost:4000).
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port)) builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 // --- Database: PostgreSQL via EF Core (Npgsql) ---
-var connString = builder.Configuration.GetConnectionString("Default")
+// Prefer a managed-Postgres URL (DATABASE_URL, e.g. from Render), then a
+// configured connection string (ConnectionStrings:Default / ConnectionStrings__Default),
+// then the local dev default.
+var connString = ConnFromDatabaseUrl()
+                 ?? builder.Configuration.GetConnectionString("Default")
                  ?? "Host=localhost;Port=5432;Database=farmfresh;Username=postgres;Password=postgres";
 builder.Services.AddDbContext<AppDbContext>(opts => opts.UseNpgsql(connString));
+
+static string? ConnFromDatabaseUrl()
+{
+    var url = Environment.GetEnvironmentVariable("DATABASE_URL");
+    if (string.IsNullOrEmpty(url)) return null;
+    var uri = new Uri(url);
+    var creds = uri.UserInfo.Split(':', 2);
+    return new NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.Port > 0 ? uri.Port : 5432,
+        Username = Uri.UnescapeDataString(creds[0]),
+        Password = creds.Length > 1 ? Uri.UnescapeDataString(creds[1]) : "",
+        Database = uri.AbsolutePath.TrimStart('/'),
+        SslMode = SslMode.Require,          // managed Postgres requires TLS
+    }.ConnectionString;
+}
 
 builder.Services.AddSingleton<JwtService>();
 builder.Services.AddSingleton<RateLimiter>();
 
-// --- CORS: allow all (mirrors the original `cors()` with no options) ---
+// --- CORS: allow any origin by default (JWT-in-header API, no cookies), or lock
+// down to a comma-separated ALLOWED_ORIGINS list (e.g. your Vercel admin URL). ---
+var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS");
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
-    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+{
+    if (!string.IsNullOrWhiteSpace(allowedOrigins))
+        p.WithOrigins(allowedOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .AllowAnyHeader().AllowAnyMethod();
+    else
+        p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+}));
 
 // --- Auth: HS256, validate signature + expiry only (loose, like jsonwebtoken) ---
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "dev-secret";
