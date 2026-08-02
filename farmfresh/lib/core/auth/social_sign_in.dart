@@ -17,9 +17,20 @@ class SocialSignInException implements Exception {
 abstract class SocialSignIn {
   static FirebaseAuth get _auth => FirebaseAuth.instance;
 
+  /// Firebase's Web OAuth client id (public). Needed so Google Sign-In returns
+  /// an id token Firebase will accept. Override with --dart-define if the
+  /// Firebase project changes.
+  static const _googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '813226610037-kctl44r7to2m1id2n0b1i2l189b7f9d1.apps.googleusercontent.com',
+  );
+
   static Future<String?> google() async {
     try {
-      final account = await GoogleSignIn(scopes: const ['email']).signIn();
+      final account = await GoogleSignIn(
+        scopes: const ['email'],
+        serverClientId: _googleServerClientId.isEmpty ? null : _googleServerClientId,
+      ).signIn();
       if (account == null) return null; // cancelled
       final gauth = await account.authentication;
       final cred = GoogleAuthProvider.credential(

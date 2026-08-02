@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "farmfresh-placeholder",
-    "storage_bucket": "farmfresh-placeholder.appspot.com"
+    "project_number": "813226610037",
+    "project_id": "farmfresh-3dc98",
+    "storage_bucket": "farmfresh-3dc98.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "mobilesdk_app_id": "1:813226610037:android:d6ec2bc86ef72d3975d73c",
         "android_client_info": {
           "package_name": "com.farmfresh.farmfresh"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA0000000000000000000000000000000000"
+          "current_key": "AIzaSyDeWqnOxXTgZIUDbxnVSVPDCva7IxQMpgo"
         }
       ],
       "services": {
