@@ -26,10 +26,18 @@ git push -u origin master
 Notes:
 - Free web services **sleep after ~15 min idle** (first request is slow). Upgrade
   the plan to keep it warm.
-- Uploaded files (`/uploads`) are **ephemeral** on Render — seed images ship in
-  the image (fine), but new admin images / delivery-proof photos are lost on
-  redeploy. Add a Render **persistent disk** or object storage (S3/R2/Cloudinary)
-  before relying on uploads.
+- Uploaded files are durable **only if `CLOUDINARY_URL` is set** — then admin
+  product images and delivery-proof photos go to Cloudinary's CDN. Without it,
+  they fall back to local disk, which is **ephemeral** on Render (seed images
+  ship in the image and are fine; new uploads are lost on redeploy). Set up
+  Cloudinary before relying on uploads (below).
+
+### Cloudinary (durable image uploads)
+1. Create a free account at https://cloudinary.com.
+2. Dashboard → copy the **API environment variable**
+   (`cloudinary://<api_key>:<api_secret>@<cloud_name>`).
+3. Set it on Render as **`CLOUDINARY_URL`** (and in local `.env` for dev). Done —
+   the code auto-switches from disk to Cloudinary when it's present.
 
 ## 2. Admin panel on Vercel
 1. Vercel → **Add New → Project** → import the repo.
@@ -57,6 +65,7 @@ flutter build apk --dart-define=API_BASE=https://farmfresh-api.onrender.com
 | `Admin__Email` / `Admin__Password` | you | Admin panel login. |
 | `RESEND_API_KEY` / `RESEND_FROM` | you | Email OTP delivery. |
 | `FIREBASE_PROJECT_ID` | you | Google/Apple sign-in verification. |
+| `CLOUDINARY_URL` | you | Durable image uploads (else ephemeral local disk). |
 | `OTP_DEV_MODE=false` | blueprint | Stop returning OTPs in responses. |
 | `ALLOWED_ORIGINS` | optional | Restrict CORS to the admin origin. |
 | `PORT` | Render | Injected; the app binds to it automatically. |

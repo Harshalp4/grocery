@@ -132,7 +132,7 @@ public class PartnerOrdersController : PartnerBase
 
         if (!string.IsNullOrEmpty(photo))
         {
-            var url = SaveProof(order.Id, photo);
+            var url = await SaveProof(order.Id, photo);
             if (url == null) return BadRequest(new { error = "Unsupported photo (png/jpg/webp, max 3 MB)" });
             order.ProofPhotoUrl = url;
         }
@@ -205,7 +205,7 @@ public class PartnerOrdersController : PartnerBase
         await Notify.ToUser(_db, order.UserId, title, bodyText, "order", order.Id);
     }
 
-    private string? SaveProof(string orderId, string dataUrl)
+    private async Task<string?> SaveProof(string orderId, string dataUrl)
     {
         var m = Regex.Match(dataUrl, @"^data:image/(png|jpe?g|webp);base64,(.+)$");
         if (!m.Success) return null;
@@ -213,6 +213,10 @@ public class PartnerOrdersController : PartnerBase
         byte[] buf;
         try { buf = Convert.FromBase64String(m.Groups[2].Value); } catch { return null; }
         if (buf.Length > 3_000_000) return null;
+
+        if (Services.ImageStore.Configured)
+            return await Services.ImageStore.UploadAsync(buf, ext, "farmfresh/proof", $"{orderId}-{Guid.NewGuid():N}");
+
         var dir = Path.Combine(_env.ContentRootPath, "uploads", "proof");
         Directory.CreateDirectory(dir);
         var file = $"{orderId}-{Guid.NewGuid():N}.{ext}";

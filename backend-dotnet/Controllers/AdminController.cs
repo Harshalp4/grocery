@@ -222,11 +222,24 @@ public class AdminController : ControllerBase
         var row = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
         if (row == null) return NotFound(new { error = "Product not found" });
 
-        var dir = Path.Combine(_env.ContentRootPath, "uploads");
-        Directory.CreateDirectory(dir);
-        var file = $"{id}-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.{ext}";
-        await System.IO.File.WriteAllBytesAsync(Path.Combine(dir, file), buf);
-        var imageUrl = $"/uploads/{file}";
+        var stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        string imageUrl;
+        if (Services.ImageStore.Configured)
+        {
+            // Durable CDN storage (survives restarts/redeploys).
+            var url = await Services.ImageStore.UploadAsync(buf, ext, "farmfresh/products", $"{id}-{stamp}");
+            if (url == null) return StatusCode(502, new { error = "Image upload failed" });
+            imageUrl = url;
+        }
+        else
+        {
+            // Local-disk fallback (dev / no object storage configured).
+            var dir = Path.Combine(_env.ContentRootPath, "uploads");
+            Directory.CreateDirectory(dir);
+            var file = $"{id}-{stamp}.{ext}";
+            await System.IO.File.WriteAllBytesAsync(Path.Combine(dir, file), buf);
+            imageUrl = $"/uploads/{file}";
+        }
         row.ImageUrl = imageUrl;
         await _db.SaveChangesAsync();
         return Ok(new { imageUrl });

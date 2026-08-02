@@ -26,6 +26,8 @@ services:
         sync: false
       - key: FIREBASE_PROJECT_ID   # Google/Apple sign-in token verification
         sync: false
+      - key: CLOUDINARY_URL        # durable image storage (else images are ephemeral)
+        sync: false
       # Optional: lock CORS to your admin URL once Vercel is deployed
       # - key: ALLOWED_ORIGINS
       #   value: https://your-admin.vercel.app

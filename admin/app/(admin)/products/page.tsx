@@ -50,10 +50,13 @@ function Thumb({ src, alt }: { src: string | null; alt: string }) {
       </div>
     );
   }
+  // Absolute URLs (e.g. Cloudinary) are used as-is; relative /uploads paths get
+  // the API base prefixed.
+  const url = src.startsWith("http") ? src : `${API_BASE}${src}`;
   // eslint-disable-next-line @next/next/no-img-element
   return (
     <img
-      src={`${API_BASE}${src}`}
+      src={url}
       alt={alt}
       className="h-11 w-11 rounded-lg border border-line object-cover"
     />
