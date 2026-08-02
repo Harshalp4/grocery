@@ -12,7 +12,12 @@
           "package_name": "com.farmfresh.farmfresh"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "813226610037-kctl44r7to2m1id2n0b1i2l189b7f9d1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDeWqnOxXTgZIUDbxnVSVPDCva7IxQMpgo"
@@ -20,7 +25,41 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "813226610037-kctl44r7to2m1id2n0b1i2l189b7f9d1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:813226610037:android:88c6cd6618a0d4f275d73c",
+        "android_client_info": {
+          "package_name": "com.farmfresh.partner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "813226610037-kctl44r7to2m1id2n0b1i2l189b7f9d1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeWqnOxXTgZIUDbxnVSVPDCva7IxQMpgo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "813226610037-kctl44r7to2m1id2n0b1i2l189b7f9d1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
