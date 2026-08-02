@@ -40,18 +40,19 @@ public static class ImageStore
             // Signature = SHA1 of the signed params (sorted) + api_secret.
             var signature = Sha1Hex($"folder={folder}&public_id={publicId}&timestamp={ts}{secret}");
 
+            // Auth + params go in the query string (Cloudinary reads them there),
+            // avoiding .NET's unquoted multipart field-name quirk. Only the binary
+            // file goes in the body.
+            var query = $"api_key={key}&timestamp={ts}&signature={signature}" +
+                        $"&folder={Uri.EscapeDataString(folder)}&public_id={Uri.EscapeDataString(publicId)}";
+
             using var form = new MultipartFormDataContent();
             var file = new ByteArrayContent(bytes);
             file.Headers.ContentType = new MediaTypeHeaderValue($"image/{ext}");
             form.Add(file, "file", $"{publicId}.{ext}");
-            form.Add(new StringContent(key), "api_key");
-            form.Add(new StringContent(ts), "timestamp");
-            form.Add(new StringContent(folder), "folder");
-            form.Add(new StringContent(publicId), "public_id");
-            form.Add(new StringContent(signature), "signature");
 
             var res = await _http.PostAsync(
-                $"https://api.cloudinary.com/v1_1/{cloud}/image/upload", form);
+                $"https://api.cloudinary.com/v1_1/{cloud}/image/upload?{query}", form);
             var bodyText = await res.Content.ReadAsStringAsync();
             if (!res.IsSuccessStatusCode)
             {
