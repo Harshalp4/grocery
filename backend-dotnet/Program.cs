@@ -166,6 +166,7 @@ app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Json(new
     storage = ImageStore.Configured ? "cloudinary" : "disk",
     email = Mailer.Configured ? "resend" : "dev",
     social = SocialAuth.FirebaseConfigured ? "firebase" : "off",
+    push = Fcm.Configured ? "fcm-v1" : "off",
 }));
 app.MapControllers();
 

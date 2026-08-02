@@ -58,20 +58,20 @@ public static class Notify
         Push(tokens, title, body, orderId);
     }
 
-    // FCM send seam. No-ops (just logs) until a server key is configured, so
-    // the rest of the app is unaffected by the absence of Firebase.
+    // FCM send seam. Prefers the modern HTTP v1 API (service account), falls
+    // back to the legacy server key, else no-ops (just logs). Fire-and-forget so
+    // a slow/unreachable FCM never blocks the request.
     private static void Push(IEnumerable<string> tokens, string title, string body,
         string? orderId = null)
     {
         var list = tokens.Where(t => !string.IsNullOrWhiteSpace(t)).Distinct().ToList();
         if (list.Count == 0) return;
-        if (!FcmConfigured)
-        {
+        if (Fcm.Configured)
+            _ = Fcm.SendAsync(list, title, body, orderId);   // HTTP v1
+        else if (FcmConfigured)
+            _ = SendFcm(list, title, body, orderId);          // legacy server key
+        else
             Console.WriteLine($"[PUSH stub] \"{title}\" -> {list.Count} device(s)");
-            return;
-        }
-        // Fire-and-forget so a slow/unreachable FCM never blocks the request.
-        _ = SendFcm(list, title, body, orderId);
     }
 
     /// Legacy FCM HTTP send. For the modern HTTP v1 API, swap the URL to
