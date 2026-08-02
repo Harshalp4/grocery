@@ -30,11 +30,12 @@ public static class ImageStore
 
     public static bool Configured => Creds() != null;
 
-    /// Upload bytes and return the secure CDN URL, or null on failure.
-    public static async Task<string?> UploadAsync(byte[] bytes, string ext, string folder, string publicId)
+    /// Upload bytes; returns (url, null) on success or (null, error) on failure.
+    public static async Task<(string? url, string? error)> UploadAsync(
+        byte[] bytes, string ext, string folder, string publicId)
     {
         var c = Creds();
-        if (c == null) return null;
+        if (c == null) return (null, "Cloudinary not configured");
         var (cloud, key, secret) = c.Value;
         try
         {
@@ -54,18 +55,19 @@ public static class ImageStore
 
             var res = await _http.PostAsync(
                 $"https://api.cloudinary.com/v1_1/{cloud}/image/upload", form);
+            var bodyText = await res.Content.ReadAsStringAsync();
             if (!res.IsSuccessStatusCode)
             {
-                Console.WriteLine($"[Cloudinary] upload failed: {(int)res.StatusCode}");
-                return null;
+                Console.WriteLine($"[Cloudinary] {(int)res.StatusCode}: {bodyText}");
+                return (null, $"cloudinary {(int)res.StatusCode}: {bodyText}");
             }
-            var json = JsonDocument.Parse(await res.Content.ReadAsStringAsync()).RootElement;
-            return json.GetProperty("secure_url").GetString();
+            var url = JsonDocument.Parse(bodyText).RootElement.GetProperty("secure_url").GetString();
+            return (url, null);
         }
         catch (Exception e)
         {
             Console.WriteLine($"[Cloudinary error] {e.Message}");
-            return null;
+            return (null, e.Message);
         }
     }
 

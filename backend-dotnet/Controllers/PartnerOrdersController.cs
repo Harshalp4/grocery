@@ -215,7 +215,7 @@ public class PartnerOrdersController : PartnerBase
         if (buf.Length > 3_000_000) return null;
 
         if (Services.ImageStore.Configured)
-            return await Services.ImageStore.UploadAsync(buf, ext, "farmfresh/proof", $"{orderId}-{Guid.NewGuid():N}");
+            return (await Services.ImageStore.UploadAsync(buf, ext, "farmfresh/proof", $"{orderId}-{Guid.NewGuid():N}")).url;
 
         var dir = Path.Combine(_env.ContentRootPath, "uploads", "proof");
         Directory.CreateDirectory(dir);

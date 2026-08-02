@@ -227,8 +227,8 @@ public class AdminController : ControllerBase
         if (Services.ImageStore.Configured)
         {
             // Durable CDN storage (survives restarts/redeploys).
-            var url = await Services.ImageStore.UploadAsync(buf, ext, "farmfresh/products", $"{id}-{stamp}");
-            if (url == null) return StatusCode(502, new { error = "Image upload failed" });
+            var (url, err) = await Services.ImageStore.UploadAsync(buf, ext, "farmfresh/products", $"{id}-{stamp}");
+            if (url == null) return StatusCode(502, new { error = "Image upload failed", detail = err });
             imageUrl = url;
         }
         else
