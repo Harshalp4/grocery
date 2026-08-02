@@ -157,7 +157,8 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/health", () => Results.Json(new
+// GET + HEAD so uptime monitors (which often probe with HEAD) see a 200.
+app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Json(new
 {
     ok = true,
     service = "farmfresh",
