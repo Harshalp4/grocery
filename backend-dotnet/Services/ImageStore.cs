@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace FarmFresh.Api.Services;
 
@@ -14,18 +15,14 @@ public static class ImageStore
 {
     private static readonly HttpClient _http = new();
 
+    // cloudinary://<api_key>:<api_secret>@<cloud_name> — parsed deterministically
+    // (System.Uri mishandles the custom scheme and can drop the api_key).
     private static (string cloud, string key, string secret)? Creds()
     {
-        var url = Environment.GetEnvironmentVariable("CLOUDINARY_URL");
-        if (string.IsNullOrWhiteSpace(url)) return null;
-        try
-        {
-            var u = new Uri(url);
-            var parts = u.UserInfo.Split(':', 2);
-            if (parts.Length < 2 || string.IsNullOrEmpty(u.Host)) return null;
-            return (u.Host, Uri.UnescapeDataString(parts[0]), Uri.UnescapeDataString(parts[1]));
-        }
-        catch { return null; }
+        var url = Environment.GetEnvironmentVariable("CLOUDINARY_URL")?.Trim();
+        if (string.IsNullOrEmpty(url)) return null;
+        var m = Regex.Match(url, @"^cloudinary://([^:]+):([^@]+)@(.+)$");
+        return m.Success ? (m.Groups[3].Value.Trim(), m.Groups[1].Value.Trim(), m.Groups[2].Value.Trim()) : null;
     }
 
     public static bool Configured => Creds() != null;
