@@ -157,7 +157,15 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/health", () => Results.Json(new { ok = true, service = "farmfresh" }));
+app.MapGet("/health", () => Results.Json(new
+{
+    ok = true,
+    service = "farmfresh",
+    // Non-sensitive config sanity — confirms which integrations are wired.
+    storage = Services.ImageStore.Configured ? "cloudinary" : "disk",
+    email = Services.Mailer.Configured ? "resend" : "dev",
+    social = Services.SocialAuth.FirebaseConfigured ? "firebase" : "off",
+}));
 app.MapControllers();
 
 // 404 fallback with the same JSON body as the original.
