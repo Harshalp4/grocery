@@ -36,15 +36,34 @@ function payTone(status: string): 'green' | 'gold' | 'gray' {
   return 'gold';
 }
 
+// A single shared AudioContext, unlocked on the first user gesture — browsers
+// block audio until the user has interacted with the page. Reused per chime;
+// a fresh context per beep would stay suspended and never play.
+let _audioCtx: AudioContext | null = null;
+
+function ensureAudio(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    if (!_audioCtx) {
+      const Ctx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
+      if (!Ctx) return null;
+      _audioCtx = new Ctx();
+    }
+    if (_audioCtx.state === 'suspended') void _audioCtx.resume();
+    return _audioCtx;
+  } catch {
+    return null;
+  }
+}
+
 /// A short two-tone chime via the Web Audio API — no asset to bundle.
 function playChime() {
+  const ctx = ensureAudio();
+  if (!ctx || ctx.state !== 'running') return; // still locked — banner covers it
   try {
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    const ctx = new Ctx();
-    if (ctx.state === 'suspended') void ctx.resume();
     const notes = [880, 1174.66]; // A5 → D6
     notes.forEach((freq, i) => {
       const o = ctx.createOscillator();
@@ -60,9 +79,8 @@ function playChime() {
       o.start(t);
       o.stop(t + 0.34);
     });
-    setTimeout(() => void ctx.close(), 900);
   } catch {
-    /* audio blocked — the banner still shows */
+    /* ignore */
   }
 }
 
@@ -90,11 +108,28 @@ export default function OrdersPage() {
     mutedRef.current = saved;
   }, []);
 
+  // Unlock audio on the first user interaction (browser autoplay policy blocks
+  // sound until the page has been interacted with at least once).
+  useEffect(() => {
+    const unlock = () => ensureAudio();
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
+
   function toggleMuted() {
     setMuted((m) => {
       const next = !m;
       mutedRef.current = next;
       localStorage.setItem('orderSoundMuted', next ? '1' : '0');
+      // Turning sound on: unlock + a confirmation beep so it's audibly working.
+      if (!next) {
+        ensureAudio();
+        setTimeout(playChime, 80);
+      }
       return next;
     });
   }
