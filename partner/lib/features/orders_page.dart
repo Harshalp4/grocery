@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/theme.dart';
+import '../data/api_client.dart';
 import '../domain/models.dart';
 import '../providers.dart';
 
@@ -31,8 +32,15 @@ class _OrdersPageState extends ConsumerState<OrdersPage> {
     super.dispose();
   }
 
-  void _toggleDuty(bool v) {
-    ref.read(authControllerProvider.notifier).setDuty(v);
+  Future<void> _toggleDuty(bool v) async {
+    try {
+      await ref.read(authControllerProvider.notifier).setDuty(v);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              e is ApiException ? e.message : 'Could not update duty status')));
+    }
   }
 
   @override

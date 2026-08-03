@@ -184,6 +184,10 @@ public class OrdersController : ControllerBase
         if (userId != null)
             await _db.CartItems.Where(c => c.UserId == userId).ExecuteDeleteAsync();
 
+        // Alert the shop by email (fire-and-forget; never blocks the response).
+        Mailer.SendOrderAlert(order.Code, order.Total, order.Items.Sum(i => i.Qty),
+            order.CustomerName, order.Phone, order.Address, order.Slot, order.PaymentMethod);
+
         return StatusCode(201, new
         {
             id = order.Id,

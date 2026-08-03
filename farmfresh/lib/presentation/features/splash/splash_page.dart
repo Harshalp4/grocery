@@ -1,15 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/brand.dart';
 import '../../../core/widgets/buttons.dart';
+import '../../providers/auth_controller.dart';
 
 /// Screen 1 — Splash / Welcome. Brand-green gradient, logo, tagline and CTA.
-class SplashPage extends StatelessWidget {
+///
+/// If a session was restored from disk we skip the welcome and go straight to
+/// Home (or the profile step if it was never finished), so a signed-in user
+/// never has to tap "Get Started" / log in again on every launch.
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
+  ConsumerState<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends ConsumerState<SplashPage> {
+  @override
+  void initState() {
+    super.initState();
+    final user = ref.read(authControllerProvider).user;
+    if (user != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.go(user.profileComplete ? '/home' : '/complete-profile');
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // While a restored session is being routed away, hide the CTA and show a
+    // quiet spinner instead of the "Get Started" button.
+    final signedIn = ref.watch(authControllerProvider).user != null;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -64,10 +90,21 @@ class SplashPage extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                GoldButton(
-                  label: 'Get Started  →',
-                  onPressed: () => context.go('/login'),
-                ),
+                if (signedIn)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    ),
+                  )
+                else
+                  GoldButton(
+                    label: 'Get Started  →',
+                    onPressed: () => context.go('/login'),
+                  ),
                 const SizedBox(height: 8),
               ],
             ),

@@ -112,8 +112,9 @@ class AuthController extends Notifier<AuthState> {
     } catch (_) {/* best effort */}
   }
 
-  Future<void> updateName(String name) async {
-    final user = await ref.read(authRepositoryProvider).updateName(name);
+  Future<void> updateProfile(String name, String phone) async {
+    final user =
+        await ref.read(authRepositoryProvider).updateProfile(name, phone);
     await _prefs.setString(_kUser, jsonEncode(user.toJson()));
     state = AuthState(user: user);
   }

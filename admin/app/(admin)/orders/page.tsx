@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Badge, Button, Card, Empty, Modal, PageHeader, Table } from '@/components/ui';
 import { orders as api, partners as partnersApi } from '@/lib/resources';
 import type { Order, OrderStatus, Partner } from '@/lib/types';
@@ -27,10 +27,43 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
   cancelled: 'Cancelled',
 };
 
+// How often to check the API for new orders while the panel is open.
+const POLL_MS = 15000;
+
 function payTone(status: string): 'green' | 'gold' | 'gray' {
   if (status === 'paid') return 'green';
   if (status === 'failed') return 'gray';
   return 'gold';
+}
+
+/// A short two-tone chime via the Web Audio API — no asset to bundle.
+function playChime() {
+  try {
+    const Ctx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    const ctx = new Ctx();
+    if (ctx.state === 'suspended') void ctx.resume();
+    const notes = [880, 1174.66]; // A5 → D6
+    notes.forEach((freq, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.type = 'sine';
+      o.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.16;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.28, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+      o.start(t);
+      o.stop(t + 0.34);
+    });
+    setTimeout(() => void ctx.close(), 900);
+  } catch {
+    /* audio blocked — the banner still shows */
+  }
 }
 
 export default function OrdersPage() {
@@ -38,16 +71,93 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [viewing, setViewing] = useState<Order | null>(null);
   const [partners, setPartners] = useState<Partner[]>([]);
+  // Ids of orders that arrived since the admin last acknowledged — drives the
+  // banner, the unseen count, and the per-row highlight.
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const [muted, setMuted] = useState(false);
 
-  async function load() {
-    setLoading(true);
-    setRows(await api.list());
-    setLoading(false);
-  }
+  const knownIds = useRef<Set<string>>(new Set());
+  const firstLoad = useRef(true);
+  const inFlight = useRef(false);
+  const mutedRef = useRef(false);
+
+  // Restore the mute preference.
   useEffect(() => {
-    load();
-    partnersApi.list().then(setPartners).catch(() => {});
+    const saved =
+      typeof window !== 'undefined' &&
+      localStorage.getItem('orderSoundMuted') === '1';
+    setMuted(saved);
+    mutedRef.current = saved;
   }, []);
+
+  function toggleMuted() {
+    setMuted((m) => {
+      const next = !m;
+      mutedRef.current = next;
+      localStorage.setItem('orderSoundMuted', next ? '1' : '0');
+      return next;
+    });
+  }
+
+  const refresh = useCallback(async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    try {
+      const list = await api.list();
+      const incoming = list.map((o) => o.id);
+      if (firstLoad.current) {
+        firstLoad.current = false;
+        knownIds.current = new Set(incoming);
+      } else {
+        const fresh = incoming.filter((id) => !knownIds.current.has(id));
+        if (fresh.length > 0) {
+          fresh.forEach((id) => knownIds.current.add(id));
+          setNewIds((prev) => {
+            const n = new Set(prev);
+            fresh.forEach((id) => n.add(id));
+            return n;
+          });
+          if (!mutedRef.current) playChime();
+        }
+      }
+      setRows(list);
+    } catch {
+      /* transient network/API error — try again next tick */
+    } finally {
+      setLoading(false);
+      inFlight.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    partnersApi.list().then(setPartners).catch(() => {});
+    const t = setInterval(refresh, POLL_MS);
+    return () => clearInterval(t);
+  }, [refresh]);
+
+  // Reflect the unseen count in the browser tab so it's visible when unfocused.
+  useEffect(() => {
+    document.title = newIds.size > 0 ? `(${newIds.size}) Orders` : 'Orders';
+    return () => {
+      document.title = 'Orders';
+    };
+  }, [newIds]);
+
+  function markAllSeen() {
+    setNewIds(new Set());
+  }
+
+  function openView(o: Order) {
+    setViewing(o);
+    if (newIds.has(o.id)) {
+      setNewIds((prev) => {
+        const n = new Set(prev);
+        n.delete(o.id);
+        return n;
+      });
+    }
+  }
 
   async function changeStatus(id: string, status: OrderStatus) {
     const updated = await api.setStatus(id, status);
@@ -70,7 +180,33 @@ export default function OrdersPage() {
       <PageHeader
         title="Orders"
         subtitle={`${rows.length} orders · ₹${revenue.toLocaleString('en-IN')} value`}
+        action={
+          <button
+            type="button"
+            onClick={toggleMuted}
+            title={muted ? 'New-order sound is off' : 'New-order sound is on'}
+            className="rounded-lg border border-line bg-white px-3 py-1.5 text-sm"
+          >
+            {muted ? '🔕 Sound off' : '🔔 Sound on'}
+          </button>
+        }
       />
+
+      {newIds.size > 0 && (
+        <button
+          type="button"
+          onClick={markAllSeen}
+          className="mb-3 flex w-full items-center justify-between rounded-xl border border-brand/30 bg-brand/10 px-4 py-3 text-left"
+        >
+          <span className="font-semibold text-brand">
+            🛎️ {newIds.size} new order{newIds.size > 1 ? 's' : ''} — review below
+          </span>
+          <span className="text-xs font-semibold text-brand/70">
+            Dismiss
+          </span>
+        </button>
+      )}
+
       <Card>
         {loading ? (
           <Empty>Loading…</Empty>
@@ -78,49 +214,62 @@ export default function OrdersPage() {
           <Empty>No orders yet. Place one from the app to see it here.</Empty>
         ) : (
           <Table head={['Order', 'Customer', 'Total', 'Payment', 'Status', '']}>
-            {rows.map((o) => (
-              <tr key={o.id} className="border-b border-line last:border-0">
-                <td className="px-4 py-3">
-                  <div className="font-semibold text-ink">{o.code}</div>
-                  <div className="text-xs text-muted">{o.slot}</div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="text-ink">{o.customerName}</div>
-                  <div className="text-xs text-muted">{o.phone}</div>
-                </td>
-                <td className="px-4 py-3 font-bold text-brand">
-                  ₹{o.total.toLocaleString('en-IN')}
-                </td>
-                <td className="px-4 py-3">
-                  <div className="text-xs uppercase text-muted">{o.paymentMethod}</div>
-                  <Badge tone={payTone(o.paymentStatus)}>{o.paymentStatus}</Badge>
-                </td>
-                <td className="px-4 py-3">
-                  <select
-                    value={o.status}
-                    onChange={(e) =>
-                      changeStatus(o.id, e.target.value as OrderStatus)
-                    }
-                    className="rounded-lg border border-line bg-white px-2 py-1 text-xs font-semibold outline-none focus:border-brand"
-                  >
-                    {STATUSES.map((s) => (
-                      <option key={s} value={s}>
-                        {STATUS_LABEL[s]}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Button
-                    variant="outline"
-                    className="px-3 py-1"
-                    onClick={() => setViewing(o)}
-                  >
-                    View
-                  </Button>
-                </td>
-              </tr>
-            ))}
+            {rows.map((o) => {
+              const isNew = newIds.has(o.id);
+              return (
+                <tr
+                  key={o.id}
+                  className={`border-b border-line last:border-0 ${
+                    isNew ? 'bg-brand/5' : ''
+                  }`}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-ink">{o.code}</span>
+                      {isNew && <Badge tone="green">NEW</Badge>}
+                    </div>
+                    <div className="text-xs text-muted">{o.slot}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-ink">{o.customerName}</div>
+                    <div className="text-xs text-muted">{o.phone}</div>
+                  </td>
+                  <td className="px-4 py-3 font-bold text-brand">
+                    ₹{o.total.toLocaleString('en-IN')}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-xs uppercase text-muted">
+                      {o.paymentMethod}
+                    </div>
+                    <Badge tone={payTone(o.paymentStatus)}>{o.paymentStatus}</Badge>
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={o.status}
+                      onChange={(e) =>
+                        changeStatus(o.id, e.target.value as OrderStatus)
+                      }
+                      className="rounded-lg border border-line bg-white px-2 py-1 text-xs font-semibold outline-none focus:border-brand"
+                    >
+                      {STATUSES.map((s) => (
+                        <option key={s} value={s}>
+                          {STATUS_LABEL[s]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Button
+                      variant="outline"
+                      className="px-3 py-1"
+                      onClick={() => openView(o)}
+                    >
+                      View
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
           </Table>
         )}
       </Card>
@@ -205,11 +354,20 @@ export default function OrdersPage() {
                 className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm outline-none focus:border-brand"
               >
                 <option value="">Unassigned</option>
-                {partners.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} · {p.phone}
-                  </option>
-                ))}
+                {partners.map((p) => {
+                  // Only on-duty riders can be assigned. Keep the currently
+                  // assigned one selectable even if they've since gone off duty,
+                  // so the dropdown still shows the active assignment.
+                  const isAssigned = viewing.deliveryPartner?.id === p.id;
+                  const selectable = p.onDuty || isAssigned;
+                  return (
+                    <option key={p.id} value={p.id} disabled={!selectable}>
+                      {p.onDuty ? '● ' : '○ '}
+                      {p.name} · {p.phone}
+                      {p.onDuty ? '' : ' (off duty)'}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

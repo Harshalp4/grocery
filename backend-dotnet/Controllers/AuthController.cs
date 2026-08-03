@@ -98,21 +98,34 @@ public class AuthController : ControllerBase
     {
         var user = await _db.Users.FindAsync(this.CustomerId());
         if (user == null) return NotFound(new { error = "User not found" });
-        return Ok(new { id = user.Id, phone = user.Phone, name = user.Name });
+        return Ok(new { id = user.Id, email = user.Email, phone = user.Phone,
+            name = user.Name, profileComplete = user.ProfileComplete });
     }
 
-    // PUT /auth/me -> update the signed-in user's profile (name)
+    // PUT /auth/me -> update the signed-in user's profile (name + optional mobile)
     [Authorize(Policy = "Customer")]
     [HttpPut("/auth/me")]
     public async Task<IActionResult> UpdateMe([FromBody] JsonElement body)
     {
-        var name = GetString(body, "name");
-        if (name == null || name.Length > 60) return BadRequest(new { error = "Bad request" });
+        var name = GetString(body, "name")?.Trim();
+        if (string.IsNullOrEmpty(name) || name.Length > 60)
+            return BadRequest(new { error = "Enter your name" });
         var user = await _db.Users.FindAsync(this.CustomerId());
         if (user == null) return NotFound(new { error = "User not found" });
         user.Name = name;
+
+        // Optional mobile update — same rule as the profile step (8–15 digits).
+        var rawPhone = GetString(body, "phone");
+        if (rawPhone != null)
+        {
+            var phone = NormalisePhone(rawPhone);
+            if (phone.Length < 8 || phone.Length > 15)
+                return BadRequest(new { error = "Enter a valid mobile number" });
+            user.Phone = phone;
+        }
         await _db.SaveChangesAsync();
-        return Ok(new { id = user.Id, phone = user.Phone, name = user.Name });
+        return Ok(new { id = user.Id, email = user.Email, phone = user.Phone,
+            name = user.Name, profileComplete = user.ProfileComplete });
     }
 
     // DELETE /auth/me -> delete the signed-in customer's account (App-Store req).

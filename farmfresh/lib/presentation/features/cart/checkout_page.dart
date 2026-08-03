@@ -15,6 +15,7 @@ import '../../../domain/entities/order.dart';
 import '../../providers/auth_controller.dart';
 import '../../providers/cart_controller.dart';
 import '../../providers/repository_providers.dart';
+import '../addresses/addresses_page.dart';
 
 /// Screen 9 — Checkout. Address, delivery slot, payment method, order summary.
 class CheckoutPage extends ConsumerStatefulWidget {
@@ -175,6 +176,15 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     );
   }
 
+  /// Add an address inline (a sheet over Checkout) and select it — so the user
+  /// stays on Checkout instead of being sent to the Profile → Addresses tab.
+  Future<void> _addAddress() async {
+    final created = await showAddressForm(context, ref);
+    if (created != null && mounted) {
+      setState(() => _selectedAddressId = created.id);
+    }
+  }
+
   Address? _resolveAddress(List<Address> list) {
     if (list.isEmpty) return null;
     if (_selectedAddressId != null) {
@@ -221,7 +231,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                     style: TextStyle(fontSize: 13, color: c.muted)),
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
-                  onPressed: () => context.go('/profile/addresses'),
+                  onPressed: _addAddress,
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add a delivery address'),
                 ),
@@ -285,6 +295,19 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   Navigator.pop(context);
                 },
               ),
+            const Divider(height: 1),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.add_location_alt_outlined,
+                  color: context.colors.green),
+              title: Text('Add new address',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700, color: context.colors.green)),
+              onTap: () {
+                Navigator.pop(context);
+                _addAddress();
+              },
+            ),
           ],
         ),
       ),

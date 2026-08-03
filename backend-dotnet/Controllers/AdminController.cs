@@ -462,6 +462,10 @@ public class AdminController : ControllerBase
             var partner = await _db.DeliveryPartners.FirstOrDefaultAsync(p => p.Id == partnerId);
             if (partner == null || !partner.Active)
                 return BadRequest(new { error = "Partner not found or inactive" });
+            // Only on-duty (online) riders can be assigned — an off-duty rider
+            // won't get the live-location flow and may not be working.
+            if (!partner.OnDuty)
+                return BadRequest(new { error = "Partner is off duty" });
             order.AssignedAt = DateTime.UtcNow;
             _db.OrderEvents.Add(new OrderEvent { OrderId = order.Id, Status = order.Status, Note = "Assigned to delivery partner" });
             await Services.Notify.ToPartner(_db, partner.Id, "New delivery assigned",

@@ -69,8 +69,8 @@ class RemoteAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<AppUser> updateName(String name) async {
-    final j = await _api.putJson('/auth/me', {'name': name})
+  Future<AppUser> updateProfile(String name, String phone) async {
+    final j = await _api.putJson('/auth/me', {'name': name, 'phone': phone})
         as Map<String, dynamic>;
     return AppUser.fromJson(j);
   }

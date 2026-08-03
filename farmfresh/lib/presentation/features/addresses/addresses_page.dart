@@ -84,15 +84,8 @@ class AddressesPage extends ConsumerWidget {
   }
 
   Future<void> _openForm(BuildContext context, WidgetRef ref,
-      {Address? existing}) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _AddressForm(existing: existing),
-    );
-    ref.invalidate(addressesProvider);
-  }
+          {Address? existing}) =>
+      showAddressForm(context, ref, existing: existing);
 
   Future<void> _delete(BuildContext context, WidgetRef ref, Address a) async {
     final ok = await showDialog<bool>(
@@ -166,15 +159,31 @@ class _AddressCard extends StatelessWidget {
   }
 }
 
-class _AddressForm extends ConsumerStatefulWidget {
-  const _AddressForm({this.existing});
+/// Shows the add/edit address sheet and returns the saved [Address] (or null if
+/// dismissed), after invalidating [addressesProvider] so open screens refresh.
+/// Reused by Checkout so adding an address there stays in the checkout flow
+/// instead of navigating away to the Profile → Addresses tab.
+Future<Address?> showAddressForm(BuildContext context, WidgetRef ref,
+    {Address? existing}) async {
+  final saved = await showModalBottomSheet<Address>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => AddressForm(existing: existing),
+  );
+  ref.invalidate(addressesProvider);
+  return saved;
+}
+
+class AddressForm extends ConsumerStatefulWidget {
+  const AddressForm({super.key, this.existing});
   final Address? existing;
 
   @override
-  ConsumerState<_AddressForm> createState() => _AddressFormState();
+  ConsumerState<AddressForm> createState() => _AddressFormState();
 }
 
-class _AddressFormState extends ConsumerState<_AddressForm> {
+class _AddressFormState extends ConsumerState<AddressForm> {
   late final _label = TextEditingController(text: widget.existing?.label ?? 'Home');
   late final _line = TextEditingController(text: widget.existing?.line ?? '');
   late final _area = TextEditingController(text: widget.existing?.area ?? '');
@@ -238,12 +247,10 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
     );
     try {
       final repo = ref.read(addressRepositoryProvider);
-      if (widget.existing == null) {
-        await repo.add(input);
-      } else {
-        await repo.update(widget.existing!.id, input);
-      }
-      if (mounted) Navigator.pop(context);
+      final saved = widget.existing == null
+          ? await repo.add(input)
+          : await repo.update(widget.existing!.id, input);
+      if (mounted) Navigator.pop(context, saved);
     } catch (e) {
       if (mounted) {
         setState(() {

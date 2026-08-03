@@ -41,8 +41,8 @@ class MockAuthRepository implements AuthRepository {
       _mock(phone: phone, name: name);
 
   @override
-  Future<AppUser> updateName(String name) async =>
-      AppUser(id: 'mock', phone: '', name: name);
+  Future<AppUser> updateProfile(String name, String phone) async =>
+      AppUser(id: 'mock', phone: phone, name: name, profileComplete: true);
 
   @override
   Future<void> deleteAccount() async {}

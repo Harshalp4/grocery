@@ -17,6 +17,7 @@ import '../../presentation/features/orders/my_orders_page.dart';
 import '../../presentation/features/orders/order_detail_page.dart';
 import '../../presentation/features/products/product_detail_page.dart';
 import '../../presentation/features/products/products_page.dart';
+import '../../presentation/features/profile/edit_profile_page.dart';
 import '../../presentation/features/profile/profile_page.dart';
 import '../../presentation/features/repeat/repeat_page.dart';
 import '../../presentation/features/shell/main_shell.dart';
@@ -129,6 +130,9 @@ abstract class AppRouter {
                 path: '/profile',
                 builder: (_, __) => const ProfilePage(),
                 routes: [
+                  GoRoute(
+                      path: 'edit',
+                      builder: (_, __) => const EditProfilePage()),
                   GoRoute(
                     path: 'orders',
                     builder: (_, __) => const MyOrdersPage(),

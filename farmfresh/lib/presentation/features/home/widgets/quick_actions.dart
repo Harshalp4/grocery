@@ -4,15 +4,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/dimens.dart';
 import '../../../../core/theme/theme_ext.dart';
 
-/// The quick-action grid: Auto Kirana, Combo Packs, Repeat Last Month.
+/// The quick-action grid: Combo Packs, Repeat Last Month.
+/// (Auto Kirana is hidden — its /kirana route is kept for later.)
 class QuickActions extends StatelessWidget {
   const QuickActions({super.key});
 
   @override
   Widget build(BuildContext context) {
     final actions = <_QA>[
-      _QA(Icons.receipt_long_outlined, 'Auto Kirana List',
-          () => context.go('/kirana')),
       _QA(Icons.inventory_2_outlined, 'Combo Packs',
           () => context.go('/home/combos')),
       _QA(Icons.autorenew, 'Repeat Last Month',

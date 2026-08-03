@@ -29,8 +29,6 @@ class ProfilePage extends ConsumerWidget {
           () => context.go('/profile/wishlist')),
       _Row(Icons.notifications_outlined, 'Notifications', 'Order updates & offers',
           () => context.go('/home/notifications')),
-      _Row(Icons.receipt_long_outlined, 'Auto Kirana', 'Plan your monthly basket',
-          () => context.go('/kirana')),
       _Row(Icons.location_on_outlined, 'Addresses', 'Manage delivery addresses',
           () => context.go('/profile/addresses')),
       _Row(Icons.card_giftcard_outlined, 'Referrals', 'Coming soon',
@@ -73,9 +71,9 @@ class ProfilePage extends ConsumerWidget {
                 ),
                 if (user != null)
                   IconButton(
-                    tooltip: 'Edit name',
+                    tooltip: 'Edit profile',
                     icon: Icon(Icons.edit_outlined, size: 20, color: c.muted),
-                    onPressed: () => _editName(context, ref, user.name ?? ''),
+                    onPressed: () => context.go('/profile/edit'),
                   ),
               ],
             ),
@@ -136,17 +134,20 @@ class ProfilePage extends ConsumerWidget {
   Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
     final ok = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      // Pop with the dialog's OWN context: showDialog pushes onto the root
+      // navigator, but this page runs under the shell's branch navigator —
+      // popping with the page context tears down the branch (black screen).
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('Delete account?'),
         content: const Text(
             'This permanently deletes your account, addresses, cart and '
             'wishlist. This cannot be undone.'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.pop(dialogCtx, false),
               child: const Text('Cancel')),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () => Navigator.pop(dialogCtx, true),
               child: Text('Delete',
                   style: TextStyle(color: Colors.red.shade600))),
         ],
@@ -160,39 +161,6 @@ class ProfilePage extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Could not delete: $e')));
-      }
-    }
-  }
-
-  Future<void> _editName(
-      BuildContext context, WidgetRef ref, String current) async {
-    final ctl = TextEditingController(text: current);
-    final name = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Edit name'),
-        content: TextField(
-          controller: ctl,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(hintText: 'Your name'),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          TextButton(
-              onPressed: () => Navigator.pop(context, ctl.text.trim()),
-              child: const Text('Save')),
-        ],
-      ),
-    );
-    if (name == null || name.isEmpty) return;
-    try {
-      await ref.read(authControllerProvider.notifier).updateName(name);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }

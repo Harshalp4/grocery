@@ -24,7 +24,8 @@ abstract interface class AuthRepository {
   Future<OtpRequest> requestOtp(String phone);
   Future<AuthSession> verifyOtp(String phone, String code, {String? name});
 
-  Future<AppUser> updateName(String name);
+  /// Update the signed-in customer's name + mobile (PUT /auth/me).
+  Future<AppUser> updateProfile(String name, String phone);
 
   /// Permanently delete the signed-in customer's account (DELETE /auth/me).
   Future<void> deleteAccount();

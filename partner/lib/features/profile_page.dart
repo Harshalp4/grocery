@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/theme.dart';
+import '../data/api_client.dart';
 import '../providers.dart';
 
 class ProfilePage extends ConsumerWidget {
@@ -55,7 +56,18 @@ class ProfilePage extends ConsumerWidget {
           Card(
             child: SwitchListTile(
               value: partner.onDuty,
-              onChanged: (v) => ref.read(authControllerProvider.notifier).setDuty(v),
+              onChanged: (v) async {
+                try {
+                  await ref.read(authControllerProvider.notifier).setDuty(v);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(e is ApiException
+                            ? e.message
+                            : 'Could not update duty status')));
+                  }
+                }
+              },
               title: const Text('On duty'),
               subtitle: Text(partner.onDuty
                   ? 'Receiving new orders'

@@ -46,6 +46,7 @@ class CustomerOrder {
     this.partnerLat,
     this.partnerLng,
     this.partnerLocationAt,
+    this.deliveryOtp,
   });
 
   final String id;
@@ -71,7 +72,17 @@ class CustomerOrder {
   final double? partnerLng;
   final DateTime? partnerLocationAt;
 
+  /// 4-digit code the customer shares with the rider to confirm delivery.
+  /// Minted server-side at out-for-delivery; null until then / after delivery.
+  final String? deliveryOtp;
+
   String get statusLabel => orderStatusLabel(status);
+
+  /// Show the delivery code while the rider is out for delivery and it exists.
+  bool get showDeliveryCode =>
+      status == 'out_for_delivery' &&
+      deliveryOtp != null &&
+      deliveryOtp!.isNotEmpty;
   bool get isCancellable => status == 'placed' || status == 'confirmed';
   bool get canReport => status == 'delivered' && returnStatus == null;
 

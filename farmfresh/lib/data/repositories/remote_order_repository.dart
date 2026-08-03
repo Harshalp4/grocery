@@ -123,6 +123,7 @@ class RemoteOrderRepository implements OrderRepository {
       partnerLng: (partner?['lastLng'] as num?)?.toDouble(),
       partnerLocationAt:
           DateTime.tryParse(partner?['lastLocationAt'] as String? ?? ''),
+      deliveryOtp: j['deliveryOtp'] as String?,
       createdAt:
           DateTime.tryParse(j['createdAt'] as String? ?? '') ?? DateTime(2026),
       items: ((j['items'] as List<dynamic>?) ?? [])

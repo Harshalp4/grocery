@@ -96,7 +96,18 @@ public class PartnerAuthController : PartnerBase
     {
         var (me, err) = await LoadPartner(_db);
         if (err != null) return err;
-        me!.OnDuty = body.BoolOr("onDuty", me.OnDuty);
+        var wantOnDuty = body.BoolOr("onDuty", me!.OnDuty);
+        // Block going off duty while active deliveries are in hand — otherwise an
+        // in-flight order is stranded with an offline rider.
+        if (!wantOnDuty && me.OnDuty)
+        {
+            var active = await _db.Orders.CountAsync(o => o.DeliveryPartnerId == me.Id
+                && (o.Status == "packed" || o.Status == "picked_up" || o.Status == "out_for_delivery"));
+            if (active > 0)
+                return Conflict(new { error =
+                    $"You have {active} active delivery(ies). Finish or hand them back before going off duty." });
+        }
+        me.OnDuty = wantOnDuty;
         if (!me.OnDuty) { me.LastLat = null; me.LastLng = null; me.LastLocationAt = null; }
         await _db.SaveChangesAsync();
         return Ok(new { onDuty = me.OnDuty });

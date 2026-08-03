@@ -18,6 +18,8 @@ dependencies:
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
   geolocator: ^13.0.1
+  # Open the destination in the Google Maps app for turn-by-turn navigation.
+  url_launcher: ^6.3.0
   # Push notifications (FCM) — see PUSH_NOTIFICATIONS.md. Placeholder config
   # ships so the app builds; drop in a real google-services.json to enable.
   firebase_core: ^3.6.0

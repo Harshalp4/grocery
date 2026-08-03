@@ -104,6 +104,10 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                 const SizedBox(height: 4),
                 Text(o.eta!, style: TextStyle(fontSize: 13, color: c.muted)),
               ],
+              if (o.showDeliveryCode) ...[
+                const SizedBox(height: 14),
+                _DeliveryCodeCard(code: o.deliveryOtp!),
+              ],
               const SizedBox(height: 16),
 
               // Live rider map (only while out for delivery with a fresh fix).
@@ -327,6 +331,56 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
             .showSnackBar(SnackBar(content: Text('$e')));
       }
     }
+  }
+}
+
+/// Prominent card showing the delivery code the customer reads out to the
+/// rider to confirm delivery (shown only while out for delivery).
+class _DeliveryCodeCard extends StatelessWidget {
+  const _DeliveryCodeCard({required this.code});
+  final String code;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: c.greenSoft,
+        borderRadius: AppRadius.smAll,
+        border: Border.all(color: c.green.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.verified_user_outlined, color: c.green),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Delivery code',
+                    style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: c.muted)),
+                const SizedBox(height: 2),
+                Text('Share with your delivery partner to confirm delivery',
+                    style: TextStyle(fontSize: 12, color: c.muted)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            code.split('').join(' '),
+            style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2,
+                color: c.green),
+          ),
+        ],
+      ),
+    );
   }
 }
 
