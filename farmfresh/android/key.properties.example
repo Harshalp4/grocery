@@ -1,0 +1,11 @@
+# Copy to `android/key.properties` (gitignored) and fill in with YOUR values.
+# These are the upload-key credentials the release build signs with.
+# Generate the keystore first:
+#   keytool -genkey -v -keystore %USERPROFILE%\farmfresh-upload.jks \
+#           -keyalg RSA -keysize 2048 -validity 10000 -alias farmfresh
+#
+# storeFile: absolute path, forward slashes (e.g. C:/Users/deven/farmfresh-upload.jks)
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=farmfresh
+storeFile=C:/Users/deven/farmfresh-upload.jks
