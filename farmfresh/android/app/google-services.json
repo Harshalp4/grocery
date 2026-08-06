@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "813226610037-dsj1rs70bdsfa8l9atilqklb1bb1ofaj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.farmfresh.farmfresh",
+            "certificate_hash": "a8888392e8dc2b4d90e07b094c04df84efabc255"
+          }
+        },
+        {
           "client_id": "813226610037-kctl44r7to2m1id2n0b1i2l189b7f9d1.apps.googleusercontent.com",
           "client_type": 3
         }
