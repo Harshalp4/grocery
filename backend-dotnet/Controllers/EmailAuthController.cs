@@ -30,6 +30,13 @@ public class EmailAuthController : ControllerBase
     private static bool ValidEmail(string e) =>
         e.Length is >= 5 and <= 254 && e.Contains('@') && e.IndexOf('@') > 0 && e.Contains('.');
 
+    // Play Store review account: this one email + code signs in without the
+    // emailed OTP (reviewers can't receive it). Overridable via env.
+    private static string ReviewerEmail =>
+        NormEmail(Environment.GetEnvironmentVariable("REVIEWER_EMAIL") ?? "review@farmfresh24.app");
+    private static string ReviewerCode =>
+        Environment.GetEnvironmentVariable("REVIEWER_CODE") ?? "246810";
+
     private object AuthResult(User u) => new
     {
         token = _jwt.SignCustomerToken(u.Id, u.Phone, u.TokenVersion),
@@ -69,6 +76,21 @@ public class EmailAuthController : ControllerBase
         var code = Str(body, "code");
         if (!ValidEmail(email) || string.IsNullOrEmpty(code) || code.Length is < 4 or > 6)
             return BadRequest(new { error = "Bad request" });
+
+        // Play Store reviewer bypass — fixed email + code logs in without the
+        // emailed OTP. No special privileges (a normal customer account); the
+        // profile step still runs. Remove/rotate REVIEWER_* after launch.
+        if (email == ReviewerEmail && code == ReviewerCode)
+        {
+            var reviewer = await _db.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (reviewer == null)
+            {
+                reviewer = new User { Email = email };
+                _db.Users.Add(reviewer);
+                await _db.SaveChangesAsync();
+            }
+            return Ok(AuthResult(reviewer));
+        }
 
         if (!_rl.Allow($"eotp-verify:{email}", 6, TimeSpan.FromMinutes(15)))
             return StatusCode(429, new { error = "Too many attempts. Request a new code." });
