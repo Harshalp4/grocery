@@ -38,7 +38,7 @@ export default function DeleteAccountPage() {
       <h2 style={h2}>Option 2 — Request deletion by email</h2>
       <p>
         If you can&apos;t access the app, email{' '}
-        <a href="mailto:support@farmfresh24.app">support@farmfresh24.app</a> from your
+        <a href="mailto:harshal.patil0526@gmail.com">harshal.patil0526@gmail.com</a> from your
         registered email address with the subject <em>&ldquo;Delete my account&rdquo;</em>.
         We verify the request and complete deletion within <strong>7 days</strong>.
       </p>
@@ -62,7 +62,7 @@ export default function DeleteAccountPage() {
       <h2 style={h2}>Contact</h2>
       <p style={muted}>
         Questions about deletion or your data: {' '}
-        <a href="mailto:support@farmfresh24.app">support@farmfresh24.app</a>
+        <a href="mailto:harshal.patil0526@gmail.com">harshal.patil0526@gmail.com</a>
         <br />
         Bit2Sky India Pvt. Ltd. · Navi Mumbai, Maharashtra, India
       </p>

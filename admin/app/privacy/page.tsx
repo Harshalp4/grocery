@@ -73,7 +73,7 @@ export default function PrivacyPage() {
 
       <h2 style={h2}>Contact</h2>
       <p style={muted}>
-        <a href="mailto:support@farmfresh24.app">support@farmfresh24.app</a>
+        <a href="mailto:harshal.patil0526@gmail.com">harshal.patil0526@gmail.com</a>
         <br />
         Bit2Sky India Pvt. Ltd. · Navi Mumbai, Maharashtra, India
       </p>
