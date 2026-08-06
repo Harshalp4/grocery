@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "813226610037-rstr4min4op6prje2f8qkjnkn6vbqn2i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.farmfresh.farmfresh",
+            "certificate_hash": "64bf18f781703b615b17568418cf1094b42eac02"
+          }
+        },
+        {
           "client_id": "813226610037-kctl44r7to2m1id2n0b1i2l189b7f9d1.apps.googleusercontent.com",
           "client_type": 3
         }
