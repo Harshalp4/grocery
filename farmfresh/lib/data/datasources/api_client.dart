@@ -79,6 +79,15 @@ class ApiException implements Exception {
   final String url;
   final String body;
 
+  /// The server's `{ "error": "..." }` message when present, else a generic one.
+  String get message {
+    try {
+      final j = jsonDecode(body);
+      if (j is Map && j['error'] is String) return j['error'] as String;
+    } catch (_) {/* non-JSON body */}
+    return 'Something went wrong. Please try again.';
+  }
+
   @override
   String toString() => 'ApiException($statusCode) $url';
 }

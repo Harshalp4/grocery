@@ -121,6 +121,8 @@ public class AuthController : ControllerBase
             var phone = NormalisePhone(rawPhone);
             if (phone.Length < 8 || phone.Length > 15)
                 return BadRequest(new { error = "Enter a valid mobile number" });
+            if (await _db.Users.AnyAsync(u => u.Phone == phone && u.Id != user.Id))
+                return Conflict(new { error = "This mobile number is already registered to another account." });
             user.Phone = phone;
         }
         await _db.SaveChangesAsync();

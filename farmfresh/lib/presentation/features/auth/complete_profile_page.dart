@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme_ext.dart';
+import '../../../data/datasources/api_client.dart';
 import '../../providers/auth_controller.dart';
 
 /// Mandatory profile step for new users: full name + mobile number. Name is
@@ -46,7 +47,10 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
       if (!mounted) return;
       context.go('/home');
     } catch (e) {
-      if (mounted) setState(() => _error = 'Could not save. Please try again.');
+      if (mounted) {
+        setState(() => _error =
+            e is ApiException ? e.message : 'Could not save. Please try again.');
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

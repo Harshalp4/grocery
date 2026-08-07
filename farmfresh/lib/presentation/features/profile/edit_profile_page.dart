@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme_ext.dart';
+import '../../../data/datasources/api_client.dart';
 import '../../providers/auth_controller.dart';
 
 /// Edit profile — name + mobile are editable; email is the login identity and
@@ -59,9 +60,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Profile updated')));
       context.pop();
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        setState(() => _error = 'Could not save. Please try again.');
+        setState(() => _error =
+            e is ApiException ? e.message : 'Could not save. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _busy = false);

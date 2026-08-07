@@ -164,6 +164,10 @@ public class EmailAuthController : ControllerBase
         var phone = new string((Str(body, "phone") ?? "").Where(char.IsDigit).ToArray());
         if (name.Length < 2) return BadRequest(new { error = "Enter your name" });
         if (phone.Length is < 8 or > 15) return BadRequest(new { error = "Enter a valid mobile number" });
+        // Phone is unique per account. Surface a clean conflict instead of a raw
+        // 23505 when the number already belongs to another account.
+        if (await _db.Users.AnyAsync(u => u.Phone == phone && u.Id != user.Id))
+            return Conflict(new { error = "This mobile number is already registered to another account." });
         user.Name = name;
         user.Phone = phone;
         await _db.SaveChangesAsync();
