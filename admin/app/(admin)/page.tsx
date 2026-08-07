@@ -32,7 +32,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" subtitle="Overview of your FarmFresh catalog" />
+      <PageHeader title="Dashboard" subtitle="Overview of your Green Epicure catalog" />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {tiles.map((t) => (

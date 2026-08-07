@@ -41,7 +41,7 @@ export default function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-xl font-extrabold text-ink">FarmFresh Admin</h1>
+          <h1 className="text-xl font-extrabold text-ink">Green Epicure Admin</h1>
           <p className="mt-1 text-sm text-muted">Sign in to manage the store</p>
         </div>
         <div className="space-y-4">

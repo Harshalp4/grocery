@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FarmFresh Admin",
-  description: "Manage FarmFresh — products, categories, combos, and more.",
+  title: "Green Epicure Admin",
+  description: "Manage Green Epicure — products, categories, combos, and more.",
 };
 
 export default function RootLayout({

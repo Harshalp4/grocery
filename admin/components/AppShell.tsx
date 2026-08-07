@@ -122,7 +122,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <div className="mb-6 flex items-center gap-2 px-2">
           <Logo />
           <div className="leading-tight">
-            <div className="text-base font-extrabold">FarmFresh</div>
+            <div className="text-base font-extrabold">Green Epicure</div>
             <div className="text-[10px] uppercase tracking-widest text-white/60">
               Admin
             </div>
@@ -181,7 +181,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-2 bg-brand-dark px-4 py-3 text-white md:hidden">
           <Logo />
-          <span className="font-bold">FarmFresh Admin</span>
+          <span className="font-bold">Green Epicure Admin</span>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 p-5 md:p-8">
           {children}
