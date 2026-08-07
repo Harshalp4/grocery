@@ -52,6 +52,52 @@ class AppleButton extends StatelessWidget {
   }
 }
 
+/// Compact "Google" button (icon + short label) for a side-by-side row.
+class GoogleButtonCompact extends StatelessWidget {
+  const GoogleButtonCompact({super.key, this.onPressed});
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: const _GoogleG(),
+      label: const Text('Google'),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(50),
+        foregroundColor: c.ink,
+        backgroundColor: c.surface,
+        side: BorderSide(color: c.line),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      ),
+    );
+  }
+}
+
+/// Compact "Apple" button for a side-by-side row.
+class AppleButtonCompact extends StatelessWidget {
+  const AppleButtonCompact({super.key, this.onPressed});
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.apple, size: 20, color: Colors.white),
+      label: const Text('Apple'),
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(50),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      ),
+    );
+  }
+}
+
 /// Simple, dependency-free Google "G" mark — a white chip with the blue G.
 /// (Swap for the official multicolour asset before store submission.)
 class _GoogleG extends StatelessWidget {
