@@ -61,7 +61,13 @@ public static class SocialAuth
                 result.FindFirst("name")?.Value,
                 provider switch { "google.com" => "google", "apple.com" => "apple", _ => null });
         }
-        catch { return null; }
+        catch (Exception ex)
+        {
+            // Log the reason (projectId is not secret) so a failing Google/Apple
+            // sign-in is diagnosable from the host logs instead of a blind 401.
+            Console.WriteLine($"[Firebase verify FAILED] projectId=\"{projectId}\" reason={ex.GetType().Name}: {ex.Message}");
+            return null;
+        }
     }
 
     /// Validate a Google ID token via Google's tokeninfo endpoint and check the
