@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'FarmFresh24 Privacy Policy',
-  description: 'How FarmFresh24 collects, uses, and protects your data.',
+  title: 'Green Epicure Privacy Policy',
+  description: 'How Green Epicure collects, uses, and protects your data.',
 };
 
 const wrap: React.CSSProperties = {
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
     <main style={wrap}>
       <h1 style={h1}>Privacy Policy</h1>
       <p style={muted}>
-        FarmFresh24 (&ldquo;the app&rdquo;) is operated by <strong>Bit2Sky India Pvt. Ltd.</strong>
+        Green Epicure (&ldquo;the app&rdquo;) is operated by <strong>Bit2Sky India Pvt. Ltd.</strong>
         {' '}This policy explains what we collect, why, and your choices.
       </p>
 
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
       </ul>
 
       <h2 style={h2}>Children</h2>
-      <p>FarmFresh24 is intended for users aged 18 and over and is not directed at children.</p>
+      <p>Green Epicure is intended for users aged 18 and over and is not directed at children.</p>
 
       <h2 style={h2}>Contact</h2>
       <p style={muted}>

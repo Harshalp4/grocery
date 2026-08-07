@@ -12,7 +12,7 @@ public static class Mailer
 
     private static string? ApiKey => Environment.GetEnvironmentVariable("RESEND_API_KEY");
     private static string From =>
-        Environment.GetEnvironmentVariable("RESEND_FROM") ?? "FarmFresh <onboarding@resend.dev>";
+        Environment.GetEnvironmentVariable("RESEND_FROM") ?? "Green Epicure <onboarding@resend.dev>";
     public static bool Configured => !string.IsNullOrEmpty(ApiKey);
 
     // Where new-order alerts go. Prefer a dedicated ORDER_ALERT_EMAIL (a real
@@ -30,10 +30,10 @@ public static class Mailer
             Console.WriteLine($"[EMAIL OTP stub] {email} -> {code}");
             return;
         }
-        _ = SendAsync(email, "Your FarmFresh code",
+        _ = SendAsync(email, "Your Green Epicure code",
             $"""
              <div style="font-family:system-ui,sans-serif;max-width:420px;margin:auto">
-               <h2 style="color:#2F6B46">FarmFresh</h2>
+               <h2 style="color:#2F6B46">Green Epicure</h2>
                <p>Your one-time sign-in code is:</p>
                <p style="font-size:30px;font-weight:800;letter-spacing:6px;color:#16241b">{code}</p>
                <p style="color:#6c7871;font-size:13px">This code expires in 5 minutes. If you didn't

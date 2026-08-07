@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Delete your FarmFresh24 account',
+  title: 'Delete your Green Epicure account',
   description:
-    'How to delete your FarmFresh24 account and what happens to your data.',
+    'How to delete your Green Epicure account and what happens to your data.',
 };
 
 const wrap: React.CSSProperties = {
@@ -21,15 +21,15 @@ const li: React.CSSProperties = { margin: '6px 0' };
 export default function DeleteAccountPage() {
   return (
     <main style={wrap}>
-      <h1 style={h1}>Delete your FarmFresh24 account</h1>
+      <h1 style={h1}>Delete your Green Epicure account</h1>
       <p style={muted}>
-        FarmFresh24 is operated by <strong>Bit2Sky India Pvt. Ltd.</strong> This page
+        Green Epicure is operated by <strong>Bit2Sky India Pvt. Ltd.</strong> This page
         explains how to delete your account and what happens to your data.
       </p>
 
       <h2 style={h2}>Option 1 — Delete from within the app</h2>
       <ol>
-        <li style={li}>Open the <strong>FarmFresh24</strong> app.</li>
+        <li style={li}>Open the <strong>Green Epicure</strong> app.</li>
         <li style={li}>Go to the <strong>Profile</strong> tab.</li>
         <li style={li}>Tap <strong>Delete account</strong>.</li>
         <li style={li}>Confirm. Your account is deleted immediately and you are signed out.</li>

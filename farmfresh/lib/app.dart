@@ -44,7 +44,7 @@ class _FarmFreshAppState extends ConsumerState<FarmFreshApp>
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeControllerProvider);
     return MaterialApp.router(
-      title: 'FarmFresh',
+      title: 'Green Epicure',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

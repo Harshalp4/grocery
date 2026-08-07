@@ -3,7 +3,7 @@
 class Brand {
   const Brand._();
 
-  static const String name = 'FarmFresh';
+  static const String name = 'Green Epicure';
   static const String tagline = 'Farm Fresh Essentials Delivered Home';
   static const String blurb =
       'Premium own-label groceries at fair prices — across '
