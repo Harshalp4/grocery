@@ -60,7 +60,11 @@ public class AppDbContext : DbContext
             .HasForeignKey(r => r.ProductId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        b.Entity<User>().HasIndex(u => u.Phone).IsUnique();
+        // Phone is unique only for real numbers. Social sign-ins (Google/Apple)
+        // create users with an empty phone until they complete the profile step,
+        // and multiple empties must be allowed — so the unique index is filtered
+        // to non-empty values.
+        b.Entity<User>().HasIndex(u => u.Phone).IsUnique().HasFilter("\"Phone\" <> ''");
 
         b.Entity<Address>()
             .HasOne(a => a.User)
